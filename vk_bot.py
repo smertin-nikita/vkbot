@@ -12,20 +12,13 @@ class Bot:
         self.vk = vk_api.VkApi(token=token)
         self.long_poll = VkBotLongPoll(self.vk, group_id)
         self.vk_api = self.vk.get_api()
-        self.event_listen = []
 
     def start(self):
         for event in self.long_poll.listen():
             # Пришло новое сообщение
             if event.type == VkBotEventType.MESSAGE_NEW:
-                print(event)
-                self.send_message(event.object['message']['peer_id'], f"{event.object.from_id}, я получил ваше сообщение!")
-
-
-    # def event_handler(self, event_type: VkBotEventType):
-    #     self.event_listen.append(event_type)
-    #     def decorator(func):
-    #         def inner(*args, **kwargs):
+                vk_user = self.get_user_object(event.message.peer_id)[0]
+                self.send_message(event.message.peer_id, f"{vk_user['first_name']} {vk_user['last_name']}, иди за чебурешками!")
 
     def send_message(self, peer_id, message):
         self.vk_api.messages.send(
@@ -33,3 +26,10 @@ class Bot:
             message=message,
             random_id=randrange(10 ** 7)
         )
+
+    def get_user_object(self, user_id):
+        return self.vk_api.users.get(
+                user_ids=user_id,
+                fields=['screen_name', 'sex', 'bdate', 'city', 'country']
+            )
+
