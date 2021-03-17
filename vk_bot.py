@@ -18,7 +18,9 @@ class Bot:
         for event in self.long_poll.listen():
             # Пришло новое сообщение
             if event.type == VkBotEventType.MESSAGE_NEW:
-                self.send_message(event.object.peer_id, f"{event.object.from_id}, я получил ваше сообщение!")
+                print(event)
+                self.send_message(event.object['message']['peer_id'], f"{event.object.from_id}, я получил ваше сообщение!")
+
 
     # def event_handler(self, event_type: VkBotEventType):
     #     self.event_listen.append(event_type)
@@ -26,4 +28,8 @@ class Bot:
     #         def inner(*args, **kwargs):
 
     def send_message(self, peer_id, message):
-        self.vk.method('messages.send', {'user_id': peer_id, 'message': message,  'random_id': randrange(10 ** 7),})
+        self.vk_api.messages.send(
+            peer_id=peer_id,
+            message=message,
+            random_id=randrange(10 ** 7)
+        )
