@@ -6,20 +6,29 @@ from vk_api.bot_longpoll import VkBotLongPoll
 from vk_api.bot_longpoll import VkBotEventType
 
 
+class BotMessageEvent:
+    def __init__(self, event):
+        self.date = event.object['message']['date']
+        self.from_id = event.object['message']['from_id']
+        self.peer_id = event.object['message']['peer_id']
+        self.text = event.object['message']['text']
+
+
 class Bot:
     def __init__(self, token, group_id):
 
         self.vk = vk_api.VkApi(token=token)
         self.long_poll = VkBotLongPoll(self.vk, group_id)
         self.vk_api = self.vk.get_api()
-        self.event_listen = []
 
     def start(self):
         for event in self.long_poll.listen():
             # Пришло новое сообщение
             if event.type == VkBotEventType.MESSAGE_NEW:
+                event = BotMessageEvent(event)
                 print(event)
-                self.send_message(event.object['message']['peer_id'], f"{event.object.from_id}, я получил ваше сообщение!")
+                # vk_user = self.vk_api.users.get(self.get_peer_id(event))
+                self.send_message(event.peer_id, f"{event.peer_id}, я получил ваше сообщение!")
 
 
     # def event_handler(self, event_type: VkBotEventType):
