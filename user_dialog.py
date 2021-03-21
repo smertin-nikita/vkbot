@@ -6,19 +6,39 @@ from vk_user import VkUser
 
 
 class Command(Enum):
-    bdate = ["bdate"]
+    help = ["Помощь", 'help']
     gender = ["gender"]
 
 
 class Mode(Enum):
-    default = ["Обычный режим", "default"]
+    listen = ["Обычный режим"]
     get_answer = ["Режим ввода ответа"]
 
 
 class Dialog:
 
     def __init__(self, vk_user: VkUser):
-        user = vk_user
+        self.user = vk_user
+        self.mode = Mode.listen
+
+    def _start_message(self):
+        """
+
+        :return:
+        """
+        return f"Привет {self.user}\n" \
+               f"Твой возраст: {self.user.age}\n" \
+               f"Твой пол: {self.user.sex}\n" \
+               f"Твой город {self.user.city}"
+
+    def _help_message(self):
+        """
+
+        :return:
+        """
+        return f"Добавить возраст. Пример: /age 20\n" \
+               f"Добавить пол. Пример: /sex M\n" \
+               f"Добавить город. Пример: /city Москва"
 
     def input(self, message):
         """
@@ -26,4 +46,9 @@ class Dialog:
         :param message: Сообщение
         :return: Ответ пользователю, отправившему сообщение
         """
-        pass
+        if self.mode == Mode.listen:
+            if message.startswith("/"):
+                for command in Command:
+                    if message[1::] in command.value:
+                        return "Help"
+            return self._start_message()

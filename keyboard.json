@@ -1,0 +1,33 @@
+{
+  "one_time": false,
+  "buttons": [
+    [{
+      "action": {
+        "type": "text",
+        "label": "/Помощь"
+      },
+      "color": "positive"
+    },
+      {
+        "action": {
+          "type": "text",
+          "label": "Пол"
+        },
+        "color": "positive"
+      },
+      {
+        "action": {
+          "type": "text",
+          "label": "Город"
+        },
+        "color": "positive"
+      }],
+    [{
+      "action": {
+        "type": "text",
+        "label": "Искать"
+      },
+      "color": "default"
+    }]
+  ]
+}

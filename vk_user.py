@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import datetime
 
 from vk_api.vk_api import VkApiMethod
 
@@ -15,23 +15,45 @@ class VkUser:
             fields=['nickname', 'screen_name', 'first_name', 'last_name' 'sex', 'bdate', 'city', 'country']
         )[0]
 
-    @property
-    def first_name(self):
-        return self.user_object['first_name']
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
 
     @property
-    def last_name(self):
-        return self.user_object['last_name']
+    def first_name(self) -> str or None:
+        return self.user_object.get('first_name')
 
     @property
-    def bdate(self):
-        return self.user_object['bdate']
+    def last_name(self) -> str or None:
+        return self.user_object.get('last_name')
 
     @property
-    def city(self):
-        return self.user_object['city']
+    def bdate(self) -> str or None:
+        return self.user_object.get('bdate')
 
+    @property
+    def bdate_to_datetime(self) -> datetime or None:
+        if self.bdate:
+            return datetime.strptime(self.bdate, "DD.MM.YYYY")
+        else:
+            return None
+
+    @property
+    def sex(self) -> str or None:
+        return self.user_object.get('sex')
+
+    @property
+    def city(self) -> str or None:
+        city = self.user_object.get('city')
+        if city:
+            return city['title']
+        else:
+            return None
+
+    # todo return int or str
     @property
     def age(self):
-        return datetime.now() - self.bdate
+        if self.bdate:
+            return datetime.now() - self.bdate_to_datetime
+        else:
+            return None
 
