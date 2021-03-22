@@ -9,12 +9,12 @@ from user_dialog import Dialog
 from vk_user import VkUser
 
 
-class BotMessageEvent():
+class BotMessageEvent:
     def __init__(self, event):
-        self.date = event.object['message']['date']
-        self.from_id = event.object['message']['from_id']
-        self.peer_id = event.object['message']['peer_id']
-        self.text = event.object['message']['text']
+        self.date = event.obj.message['date']
+        self.from_id = event.obj.message['from_id']
+        self.peer_id = event.obj.message['peer_id']
+        self.text = event.obj.message['text']
 
 
 
@@ -26,30 +26,16 @@ class Bot:
         self.vk_api = self.vk.get_api()
         self.users = {}
 
-
     def start(self):
         for event in self.long_poll.listen():
             # Пришло новое сообщение
             if event.type == VkBotEventType.MESSAGE_NEW and event.obj.message["text"]:
-                print(event.obj.message['from_id'])
+                event = BotMessageEvent(event)
 
-                if event.obj.message['from_id'] not in self.users:
-                    self.users[event.obj.message['from_id']] = Dialog(event.obj.message['from_id'])
+                if event.from_id not in self.users:
+                    self.users[event.from_id] = Dialog(event.from_id, self.vk_api)
 
-                self.send_message(event.obj.message['peer_id'], self.users[event.obj.message['from_id']].input(event.obj.message['text']))
-
-            # elif event.type == VkBotEventType.MESSAGE_EVENT:
-            #     print('кнопка')
-            #     if event.object.payload.get("type") == "settings":
-            #         self.edit_message(event.obj.peer_id, 'ТЕСТ', event.obj.conversation_message_id, self.settings_keyboard)
-
-    def edit_message(self, peer_id, message, conversation_message_id, keyboard):
-        self.vk_api.messages.edit(
-            peer_id=peer_id,
-            message=message,
-            conversation_message_id=conversation_message_id,
-            keyboard=keyboard.get_keyboard()
-        )
+                self.send_message(event.peer_id, self.users[event.from_id].input(event.text))
 
     def send_message(self, peer_id, answer):
         self.vk_api.messages.send(
