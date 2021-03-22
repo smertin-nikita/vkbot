@@ -6,7 +6,7 @@ from vk_api.vk_api import VkApiMethod
 
 from vk_user import VkUser
 
-
+# todo Что лучше функция или класс?
 class DialogAnswer:
     def __init__(self, message: str, keyboard: VkKeyboard):
         self.message = message
@@ -22,9 +22,9 @@ class Command:
 
 class Dialog:
 
-    def __init__(self, vk_user: VkUser):
+    def __init__(self, vk_user: VkUser, vk_api):
         self.user = vk_user
-
+        self.vk_api = vk_api
         self.handler = None
 
         # todo Клавиатуры долыжны прекреплятся вне класса
@@ -52,10 +52,15 @@ class Dialog:
                 await_answer=True,
                 action=self.add_age_to_user
             ),
+            'город': Command(
+                DialogAnswer(message='Введите город', keyboard=self.settings_keyboard),
+                await_answer=True,
+                action=self.add_city_to_user
+            ),
         }
 
     # todo Подумать стоит ли инкапсулировать действия в класс
-    def add_age_to_user(self, message) -> DialogAnswer:
+    def add_age_to_user(self, message: str) -> DialogAnswer:
         # Парсинг восраста
         age = re.match(r'\d\d', message)
         if age:
@@ -63,13 +68,14 @@ class Dialog:
         else:
             return DialogAnswer(message=f'Не понял ', keyboard=self.settings_keyboard)
 
-    def add_city_to_user(self, message) -> DialogAnswer:
-        # Парсинг восраста
-        age = re.match(r'\d\d', message)
-        if age:
-            return DialogAnswer(message=f'Ваш возраст {age.string}', keyboard=self.settings_keyboard)
+    def add_city_to_user(self, message: str) -> DialogAnswer:
+        # Парсинг города
+        city_names = (city['title'].lower() for city in self.vk_api.database.getCities(country_id=1))
+        city = message.lower()
+        if city in city_names:
+            return DialogAnswer(message=f'Ваш город {city.capitalize()}', keyboard=self.settings_keyboard)
         else:
-            return DialogAnswer(message=f'Не понял ', keyboard=self.settings_keyboard)
+            return DialogAnswer(message=f'Такого города нет(', keyboard=self.settings_keyboard)
 
     def input(self, message: str):
         """
