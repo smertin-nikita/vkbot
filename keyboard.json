@@ -4,25 +4,11 @@
     [{
       "action": {
         "type": "text",
-        "label": "/Помощь"
+        "label": "Настройки"
       },
-      "color": "positive"
+      "color": "default"
     },
       {
-        "action": {
-          "type": "text",
-          "label": "Пол"
-        },
-        "color": "positive"
-      },
-      {
-        "action": {
-          "type": "text",
-          "label": "Город"
-        },
-        "color": "positive"
-      }],
-    [{
       "action": {
         "type": "text",
         "label": "Искать"
