@@ -1,3 +1,4 @@
+import re
 from enum import Enum
 
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
@@ -6,15 +7,17 @@ from vk_api.vk_api import VkApiMethod
 from vk_user import VkUser
 
 
-class Command(Enum):
-    help = ["Помощь", 'help']
-    gender = ["gender"]
+class DialogAnswer:
+    def __init__(self, message: str, keyboard: VkKeyboard):
+        self.message = message
+        self.keyboard = keyboard
 
 
-class Mode(Enum):
-    listen = ["Обычный режим"]
-    get_answer = ["Режим ввода ответа"]
-    parse_age = False
+class Command:
+    def __init__(self, answer: DialogAnswer, action=None, await_answer: bool = False):
+        self.answer = answer
+        self.action = action
+        self.await_answer = await_answer
 
 
 class Dialog:
@@ -22,14 +25,16 @@ class Dialog:
     def __init__(self, vk_user: VkUser):
         self.user = vk_user
 
-        self.parse_age = False
-        self.parse_city = False
-        self.parse_sex = False
+        self.handler = None
 
+        # todo Клавиатуры долыжны прекреплятся вне класса
         # Стартовая клавиатура
         self.start_keyboard = VkKeyboard(one_time=False)
         self.start_keyboard.add_button('Найти', color=VkKeyboardColor.POSITIVE)
         self.start_keyboard.add_button('Настройки', color=VkKeyboardColor.SECONDARY)
+
+        # Преветсвие на непонятные сообщение
+        self.current_answer = DialogAnswer(message='Привет', keyboard=self.start_keyboard)
 
         # Настройки клавиатура
         self.settings_keyboard = VkKeyboard(one_time=False)
@@ -38,32 +43,33 @@ class Dialog:
         self.settings_keyboard.add_button('Пол', color=VkKeyboardColor.POSITIVE)
         self.settings_keyboard.add_button('Назад', color=VkKeyboardColor.SECONDARY)
 
-    def _start_keyboard(self):
-        self.keyboard = VkKeyboard(one_time=False, inline=False)
-        self.keyboard.add_callback_button(
-            label="Настройки",
-            color=VkKeyboardColor.PRIMARY,
-            payload={"type": "settings"},
-        )
+        self.commands = {
+            'настройки': Command(DialogAnswer(message='Ваши критерии поиска', keyboard=self.settings_keyboard)),
+            'найти': Command(DialogAnswer(message='Ищу...', keyboard=self.start_keyboard)),
+            'назад': Command(DialogAnswer(message='Пора искать пару!', keyboard=self.start_keyboard)),
+            'возраст': Command(
+                DialogAnswer(message='Введите возраст', keyboard=self.settings_keyboard),
+                await_answer=True,
+                action=self.add_age_to_user
+            ),
+        }
 
-    def _start_message(self):
-        """
+    # todo Подумать стоит ли инкапсулировать действия в класс
+    def add_age_to_user(self, message) -> DialogAnswer:
+        # Парсинг восраста
+        age = re.match(r'\d\d', message)
+        if age:
+            return DialogAnswer(message=f'Ваш возраст {age.string}', keyboard=self.settings_keyboard)
+        else:
+            return DialogAnswer(message=f'Не понял ', keyboard=self.settings_keyboard)
 
-        :return:
-        """
-        return f"Привет {self.user}\n" \
-               f"Твой возраст: {self.user.age}\n" \
-               f"Твой пол: {self.user.sex}\n" \
-               f"Твой город {self.user.city}"
-
-    def _help_message(self):
-        """
-
-        :return:
-        """
-        return f"Добавить возраст. Пример: /age 20\n" \
-               f"Добавить пол. Пример: /sex M\n" \
-               f"Добавить город. Пример: /city Москва"
+    def add_city_to_user(self, message) -> DialogAnswer:
+        # Парсинг восраста
+        age = re.match(r'\d\d', message)
+        if age:
+            return DialogAnswer(message=f'Ваш возраст {age.string}', keyboard=self.settings_keyboard)
+        else:
+            return DialogAnswer(message=f'Не понял ', keyboard=self.settings_keyboard)
 
     def input(self, message: str):
         """
@@ -71,37 +77,21 @@ class Dialog:
         :param message: Сообщение
         :return: Ответ пользователю, отправившему сообщение
         """
-        if message.lower() == 'настройки':
-            return {'message': 'Ваши критерии поиска', 'keyboard': self.settings_keyboard}
+        # Обработать ответ от пользователя на команду ввода данных
+        if self.handler:
+            answer = self.handler(message)
+            self.handler = None
+            return answer
 
-        if message.lower() == 'назад':
-            return {'message': 'Готовы искать?', 'keyboard': self.start_keyboard}
+        elif message.lower() in self.commands.keys():
+            command = self.commands[message.lower()]
 
-        if message.lower() == 'возраст':
-            self.parse_age = True
-            return {'message': 'Введите возраст', 'keyboard': self.settings_keyboard}
+            self.current_answer.keyboard = command.answer.keyboard
 
-        if message.lower() == 'город':
-            self.parse_city = True
-            return {'message': 'Введите город', 'keyboard': self.settings_keyboard}
+            if command.await_answer:
+                self.handler = command.action
 
-        if message.lower() == 'пол':
-            self.parse_sex = True
-            return {'message': 'Введите пол', 'keyboard': self.settings_keyboard}
+            return command.answer
 
-        if self.parse_age:
-            # parse age and user.age = age
-            self.parse_age = False
-            return {'message': 'Ваш возраст', 'keyboard': self.settings_keyboard}
-
-        if self.parse_city:
-            # parse city and user.city = city
-            self.parse_city = False
-            return {'message': 'Ваш город', 'keyboard': self.settings_keyboard}
-
-        if self.parse_sex:
-            # parse sex and user.sex = sex
-            self.parse_sex = False
-            return {'message': 'Ваш пол', 'keyboard': self.settings_keyboard}
-
-        return {'message': 'Привет', 'keyboard': self.start_keyboard}
+        else:
+            return self.current_answer

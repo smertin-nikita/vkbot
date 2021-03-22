@@ -27,10 +27,6 @@ class Bot:
         self.users = {}
 
 
-
-
-
-
     def start(self):
         for event in self.long_poll.listen():
             # Пришло новое сообщение
@@ -58,7 +54,7 @@ class Bot:
     def send_message(self, peer_id, answer):
         self.vk_api.messages.send(
             peer_id=peer_id,
-            message=answer['message'],
+            message=answer.message,
             random_id=get_random_id(),
-            keyboard=answer['keyboard'].get_keyboard()
+            keyboard=answer.keyboard.get_keyboard()
         )
