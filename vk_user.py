@@ -12,8 +12,9 @@ class VkUser:
         # todo Решить проблему с hardcode fields
         self.user_object = self.vk_api.users.get(
             user_ids=self.user_id,
-            fields=['nickname', 'screen_name', 'first_name', 'last_name' 'sex', 'bdate', 'city', 'country']
+            fields=['nickname', 'screen_name', 'first_name', 'last_name', 'sex', 'bdate', 'city', 'country']
         )[0]
+        print(self.user_object )
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -33,7 +34,7 @@ class VkUser:
     @property
     def bdate_to_datetime(self) -> datetime or None:
         if self.bdate:
-            return datetime.strptime(self.bdate, "DD.MM.YYYY")
+            return datetime.strptime(self.bdate, "%d.%m.%Y")
         else:
             return None
 
@@ -46,14 +47,6 @@ class VkUser:
         city = self.user_object.get('city')
         if city:
             return city['title']
-        else:
-            return None
-
-    # todo return int or str
-    @property
-    def age(self):
-        if self.bdate:
-            return datetime.now() - self.bdate_to_datetime
         else:
             return None
 
