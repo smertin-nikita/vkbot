@@ -1,20 +1,18 @@
 from datetime import datetime
 
+from vk_api import vk_api
 from vk_api.vk_api import VkApiMethod
+
+
 
 
 class VkUser:
 
-    def __init__(self, vk_api: VkApiMethod, user_id):
-        self.vk_api = vk_api
+    def __init__(self, user_id):
         self.user_id = user_id
 
         # todo Решить проблему с hardcode fields
-        self.user_object = self.vk_api.users.get(
-            user_ids=self.user_id,
-            fields=['nickname', 'screen_name', 'first_name', 'last_name', 'sex', 'bdate', 'city', 'country']
-        )[0]
-        print(self.user_object )
+
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -49,4 +47,19 @@ class VkUser:
             return city['title']
         else:
             return None
+
+
+class VkRequester:
+    def __init__(self, token, version='5.130'):
+        self.session = vk_api.VkApi(token=token, api_version=version)
+        self.api = self.session.get_api()
+
+    def get_user(self, user_id: int, fields):
+
+        user = self.api.users.get(
+            user_ids=user_id,
+            fields=fields
+        )[0]
+
+        return user
 
