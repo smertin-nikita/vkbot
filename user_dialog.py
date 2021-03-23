@@ -1,6 +1,7 @@
 import re
 from enum import Enum
 
+import requests
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.vk_api import VkApiMethod
 
@@ -22,10 +23,10 @@ class Command:
 
 class Dialog:
 
-    def __init__(self, vk_user: VkUser, vk_api):
+    def __init__(self, vk_api, vk_user: VkUser):
         self.user = vk_user
-        self.vk_api = vk_api
         self.handler = None
+        self.api = vk_api
 
         # todo Клавиатуры долыжны прекреплятся вне класса
         # Стартовая клавиатура
@@ -44,38 +45,37 @@ class Dialog:
         self.settings_keyboard.add_button('Назад', color=VkKeyboardColor.SECONDARY)
 
         self.commands = {
-            'настройки': Command(DialogAnswer(message='Ваши критерии поиска', keyboard=self.settings_keyboard)),
-            'найти': Command(DialogAnswer(message='Ищу...', keyboard=self.start_keyboard)),
+            'настройки': Command(
+                DialogAnswer(
+                    message=f'Ваши критерии поиска:\n'
+                            f'Возраст: {self.user.bdate}\n'
+                            f'Пол: {self.user.sex}\n'
+                            f'Город: {self.user.city}\n',
+                    keyboard=self.settings_keyboard)
+            ),
+            'найти': Command(
+                DialogAnswer(message='Ищу...', keyboard=self.start_keyboard),
+                action=self.find_users
+            ),
             'назад': Command(DialogAnswer(message='Пора искать пару!', keyboard=self.start_keyboard)),
             'возраст': Command(
-                DialogAnswer(message='Введите возраст', keyboard=self.settings_keyboard),
-                await_answer=True,
-                action=self.add_age_to_user
+                DialogAnswer(message='Укажите дату рождения: https://vk.com/edit', keyboard=self.settings_keyboard)
             ),
             'город': Command(
-                DialogAnswer(message='Введите город', keyboard=self.settings_keyboard),
-                await_answer=True,
-                action=self.add_city_to_user
+                DialogAnswer(message='Укажите город проживания: https://vk.com/edit?act=contacts', keyboard=self.settings_keyboard),
+            ),
+            'пол': Command(
+                DialogAnswer(message='Укажите ваш пол: https://vk.com/edit', keyboard=self.settings_keyboard),
             ),
         }
 
-    # todo Подумать стоит ли инкапсулировать действия в класс
-    def add_age_to_user(self, message: str) -> DialogAnswer:
-        # Парсинг восраста
-        age = re.match(r'\d\d', message)
-        if age:
-            return DialogAnswer(message=f'Ваш возраст {age.string}', keyboard=self.settings_keyboard)
-        else:
-            return DialogAnswer(message=f'Не понял ', keyboard=self.settings_keyboard)
 
-    def add_city_to_user(self, message: str) -> DialogAnswer:
-        # Парсинг города
-        city_names = (city['title'].lower() for city in self.vk_api.database.getCities(country_id=1))
-        city = message.lower()
-        if city in city_names:
-            return DialogAnswer(message=f'Ваш город {city.capitalize()}', keyboard=self.settings_keyboard)
-        else:
-            return DialogAnswer(message=f'Такого города нет(', keyboard=self.settings_keyboard)
+    def find_users(self):
+        data = self.api.users.search(
+            params={
+                'q':'Vasya Babich'
+            })
+        print(data)
 
     def input(self, message: str):
         """
@@ -96,6 +96,8 @@ class Dialog:
 
             if command.await_answer:
                 self.handler = command.action
+            elif command.action:
+                command.action()
 
             return command.answer
 

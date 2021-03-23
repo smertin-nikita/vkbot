@@ -33,7 +33,7 @@ class Bot:
                 event = BotMessageEvent(event)
 
                 if event.from_id not in self.users:
-                    self.users[event.from_id] = Dialog(event.from_id, self.vk_api)
+                    self.users[event.from_id] = Dialog(self.vk_api, VkUser(self.vk_api, event.from_id))
 
                 self.send_message(event.peer_id, self.users[event.from_id].input(event.text))
 
