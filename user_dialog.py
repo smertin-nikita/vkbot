@@ -23,10 +23,8 @@ class Command:
 
 class Dialog:
 
-    def __init__(self, vk_api, vk_user: VkUser):
-        self.user = vk_user
+    def __init__(self, vk_requester, user_id):
         self.handler = None
-        self.api = vk_api
 
         # todo Клавиатуры долыжны прекреплятся вне класса
         # Стартовая клавиатура
@@ -54,8 +52,7 @@ class Dialog:
                     keyboard=self.settings_keyboard)
             ),
             'найти': Command(
-                DialogAnswer(message='Ищу...', keyboard=self.start_keyboard),
-                action=self.find_users
+                DialogAnswer(message='Ищу...', keyboard=self.start_keyboard)
             ),
             'назад': Command(DialogAnswer(message='Пора искать пару!', keyboard=self.start_keyboard)),
             'возраст': Command(
@@ -69,13 +66,6 @@ class Dialog:
             ),
         }
 
-
-    def find_users(self):
-        data = self.api.users.search(
-            params={
-                'q':'Vasya Babich'
-            })
-        print(data)
 
     def input(self, message: str):
         """

@@ -63,3 +63,9 @@ class VkRequester:
 
         return user
 
+    def search_users(self):
+        users = self.api.users.search(
+            q='Vasya'
+        )
+        print(users)
+
