@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 import vk_api.vk_api
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
@@ -33,14 +35,14 @@ class Bot:
                 event = BotMessageEvent(event)
 
                 if event.from_id not in self.users:
-                    self.users[event.from_id] = Dialog(self.vk_api, event.from_id)
+                    # self.users[event.from_id] = Dialog(self.vk_api, event.from_id)
 
-                self.send_message(event.peer_id, self.users[event.from_id].input(event.text))
+                # self.send_message(event.peer_id, self.users[event.from_id].input(event.text))
 
     def send_message(self, peer_id, answer):
         self.vk_api.messages.send(
             peer_id=peer_id,
-            message=answer.message,
+            message=answer,
             random_id=get_random_id(),
-            keyboard=answer.keyboard.get_keyboard()
+            # keyboard=answer.keyboard.get_keyboard()
         )

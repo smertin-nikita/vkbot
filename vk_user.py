@@ -10,8 +10,9 @@ class VkUser:
 
     def __init__(self, user_id):
         self.user_id = user_id
+        self.token
 
-        # todo Решить проблему с hardcode fields
+
 
 
     def __str__(self):
