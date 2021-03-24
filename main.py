@@ -17,8 +17,8 @@ group_id = os.environ.get("GROUP_ID")
 user_token = os.environ.get('USER_TOKEN')
 
 
-
 app = Flask(__name__)
+
 
 @app.route('/')
 def hello_world():
@@ -36,6 +36,7 @@ def hello_world():
     href = f"<a href='{url}'>афторизоваться</a>"
 
     return href
+
 
 @app.route('/callback')
 def get_code():
@@ -59,5 +60,12 @@ def get_code():
 
 vk_requester = VkRequester(user_token)
 
-vk_bot = vk_bot.Bot(community_token, group_id)
-vk_bot.start()
+bot = vk_bot.VkBot(community_token, group_id)
+
+
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.reply_to(message, f'Hello, {message.from_id}')
+
+
+bot.start()
