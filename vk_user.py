@@ -1,19 +1,14 @@
 from datetime import datetime
+from time import sleep
 
 from vk_api import vk_api
 from vk_api.vk_api import VkApiMethod
 
 
-
-
 class VkUser:
 
-    def __init__(self, user_id):
-        self.user_id = user_id
-        self.token
-
-
-
+    def __init__(self, user_object):
+        self.user_object = user_object
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -34,8 +29,6 @@ class VkUser:
     def bdate_to_datetime(self) -> datetime or None:
         if self.bdate:
             return datetime.strptime(self.bdate, "%d.%m.%Y")
-        else:
-            return None
 
     @property
     def sex(self) -> str or None:
@@ -43,30 +36,30 @@ class VkUser:
 
     @property
     def city(self) -> str or None:
-        city = self.user_object.get('city')
-        if city:
-            return city['title']
-        else:
-            return None
+        return self.user_object.get('city')
+
 
 
 class VkRequester:
-    def __init__(self, token, version='5.130'):
+    def __init__(self, token=None, version='5.130'):
+
         self.session = vk_api.VkApi(token=token, api_version=version)
         self.api = self.session.get_api()
+        self.fields = ['first_name', 'last_name', 'bdate', 'sex', 'city']
 
-    def get_user(self, user_id: int, fields):
-
-        user = self.api.users.get(
+    def get_user(self, user_id, fields=None):
+        sleep(0.24)
+        user_object = self.api.users.get(
             user_ids=user_id,
-            fields=fields
+            fields=self.fields
         )[0]
+        if user_object:
+            return VkUser(user_object)
 
-        return user
-
-    def search_users(self):
+    def search_users(self, kwargs):
         users = self.api.users.search(
-            q='Vasya'
+            **kwargs,
+            fields=self.fields
         )
         print(users)
 
