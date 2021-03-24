@@ -1,12 +1,13 @@
 {
   "one_time": false,
   "buttons": [
-    [{
-      "action": {
-        "type": "text",
-        "label": "Настройки"
-      },
-      "color": "default"
+  [{
+    "action":{
+       "type":"text",
+       "payload":"{\"button\": \"1\"}",
+       "label":"Red"
+        },
+        "color":"negative"
     },
       {
       "action": {

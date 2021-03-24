@@ -23,48 +23,48 @@ class Command:
 
 class Dialog:
 
-    def __init__(self, vk_requester, user_id):
-        self.handler = None
-
+    def __init__(self, message_handlers):
+        self.message_handlers = message_handlers
+        self.commands = []
         # todo Клавиатуры долыжны прекреплятся вне класса
-        # Стартовая клавиатура
-        self.start_keyboard = VkKeyboard(one_time=False)
-        self.start_keyboard.add_button('Найти', color=VkKeyboardColor.POSITIVE)
-        self.start_keyboard.add_button('Настройки', color=VkKeyboardColor.SECONDARY)
-
-        # Преветсвие на непонятные сообщение
-        self.current_answer = DialogAnswer(message='Привет', keyboard=self.start_keyboard)
-
-        # Настройки клавиатура
-        self.settings_keyboard = VkKeyboard(one_time=False)
-        self.settings_keyboard.add_button('Возраст', color=VkKeyboardColor.POSITIVE)
-        self.settings_keyboard.add_button('Город', color=VkKeyboardColor.POSITIVE)
-        self.settings_keyboard.add_button('Пол', color=VkKeyboardColor.POSITIVE)
-        self.settings_keyboard.add_button('Назад', color=VkKeyboardColor.SECONDARY)
-
-        self.commands = {
-            'настройки': Command(
-                DialogAnswer(
-                    message=f'Ваши критерии поиска:\n'
-                            f'Возраст: {self.user.bdate}\n'
-                            f'Пол: {self.user.sex}\n'
-                            f'Город: {self.user.city}\n',
-                    keyboard=self.settings_keyboard)
-            ),
-            'найти': Command(
-                DialogAnswer(message='Ищу...', keyboard=self.start_keyboard)
-            ),
-            'назад': Command(DialogAnswer(message='Пора искать пару!', keyboard=self.start_keyboard)),
-            'возраст': Command(
-                DialogAnswer(message='Укажите дату рождения: https://vk.com/edit', keyboard=self.settings_keyboard)
-            ),
-            'город': Command(
-                DialogAnswer(message='Укажите город проживания: https://vk.com/edit?act=contacts', keyboard=self.settings_keyboard),
-            ),
-            'пол': Command(
-                DialogAnswer(message='Укажите ваш пол: https://vk.com/edit', keyboard=self.settings_keyboard),
-            ),
-        }
+        # # Стартовая клавиатура
+        # self.start_keyboard = VkKeyboard(one_time=False)
+        # self.start_keyboard.add_button('Найти', color=VkKeyboardColor.POSITIVE)
+        # self.start_keyboard.add_button('Настройки', color=VkKeyboardColor.SECONDARY)
+        #
+        # # Преветсвие на непонятные сообщение
+        # self.current_answer = DialogAnswer(message='Привет', keyboard=self.start_keyboard)
+        #
+        # # Настройки клавиатура
+        # self.settings_keyboard = VkKeyboard(one_time=False)
+        # self.settings_keyboard.add_button('Возраст', color=VkKeyboardColor.POSITIVE)
+        # self.settings_keyboard.add_button('Город', color=VkKeyboardColor.POSITIVE)
+        # self.settings_keyboard.add_button('Пол', color=VkKeyboardColor.POSITIVE)
+        # self.settings_keyboard.add_button('Назад', color=VkKeyboardColor.SECONDARY)
+        #
+        # self.commands = {
+        #     'настройки': Command(
+        #         DialogAnswer(
+        #             message=f'Ваши критерии поиска:\n'
+        #                     f'Возраст: {self.user.bdate}\n'
+        #                     f'Пол: {self.user.sex}\n'
+        #                     f'Город: {self.user.city}\n',
+        #             keyboard=self.settings_keyboard)
+        #     ),
+        #     'найти': Command(
+        #         DialogAnswer(message='Ищу...', keyboard=self.start_keyboard)
+        #     ),
+        #     'назад': Command(DialogAnswer(message='Пора искать пару!', keyboard=self.start_keyboard)),
+        #     'возраст': Command(
+        #         DialogAnswer(message='Укажите дату рождения: https://vk.com/edit', keyboard=self.settings_keyboard)
+        #     ),
+        #     'город': Command(
+        #         DialogAnswer(message='Укажите город проживания: https://vk.com/edit?act=contacts', keyboard=self.settings_keyboard),
+        #     ),
+        #     'пол': Command(
+        #         DialogAnswer(message='Укажите ваш пол: https://vk.com/edit', keyboard=self.settings_keyboard),
+        #     ),
+        # }
 
 
     def input(self, message: str):
@@ -79,7 +79,7 @@ class Dialog:
             self.handler = None
             return answer
 
-        elif message.lower() in self.commands.keys():
+        elif message in self.message_handlers['commands'.keys():
             command = self.commands[message.lower()]
 
             self.current_answer.keyboard = command.answer.keyboard

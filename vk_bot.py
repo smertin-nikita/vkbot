@@ -25,14 +25,6 @@ class VkBot:
 
         self.message_handlers = []
 
-        self.users = {}
-        self.start_keyboard = VkKeyboard(one_time=False)
-        self.start_keyboard.add_button('Найти', color=VkKeyboardColor.POSITIVE)
-        self.start_keyboard.add_openlink_button(
-            label="Откртыть Url",
-            link="https://vk.com/dev/bots_docs_5",
-            payload={"type": "open_link", "link": "https://vk.com/dev/bots_docs_5"},
-        )
 
     @staticmethod
     def _build_handler_dict(handler, **filters):
@@ -60,16 +52,13 @@ class VkBot:
         for message_filter, filter_value in message_handler['filters'].items():
             if filter_value is None:
                 continue
-            if not event.text in filter_value:
+            if event.text not in filter_value:
                 return False
             print(filter_value, event.text)
 
         return True
 
-    def message_handler(self, commands=None, regexp=None, func=None, content_types=None, **kwargs):
-
-        if content_types is None:
-            content_types = ["text"]
+    def message_handler(self, commands=None, **kwargs):
 
         def decorator(handler):
             handler_dict = self._build_handler_dict(handler,
@@ -88,30 +77,24 @@ class VkBot:
         """
         self.message_handlers.append(handler_dict)
 
-    def start(self):
+    def start_longpoll(self):
         for event in self.long_poll.listen():
             # Пришло новое сообщение
             if event.type == VkBotEventType.MESSAGE_NEW and event.obj.message["text"]:
                 event = BotMessageEvent(event)
-                print(event.text)
                 for message_handler in self.message_handlers:
                     if self._test_message_handler(message_handler, event):
-                        print('work')
                         self._exec_task(message_handler['function'], event)
 
-
-    def send_message(self, peer_id, answer):
+    def send_message(self, peer_id, message, keyboard=None):
+        if keyboard:
+            keyboard = keyboard.get_keyboard()
         self.vk_api.messages.send(
             peer_id=peer_id,
-            message=answer,
+            message=message,
             random_id=get_random_id(),
-            keyboard=self.start_keyboard.get_keyboard()
+            keyboard=keyboard
         )
 
-    def reply_to(self, event, answer):
-        self.vk_api.messages.send(
-            peer_id=event.peer_id,
-            message=answer,
-            random_id=get_random_id(),
-            keyboard=self.start_keyboard.get_keyboard()
-        )
+    def reply_to(self, event, message, keyboard=None):
+        self.send_message(event.peer_id, message, keyboard)
