@@ -1,6 +1,4 @@
 import requests
-from flask import request, Flask
-from vk_api import vk_api
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
 import vk_bot
@@ -23,8 +21,6 @@ def get_url_for_token():
             'scope': ['friends'],
             'response_type': 'token'
         }).url
-
-
 
 
 if __name__ == '__main__':
@@ -52,9 +48,10 @@ if __name__ == '__main__':
             # todo Возможен случай когда get_user = None.
             user = requester.get_user(event.from_id)
             users[event.from_id] = user
+            bot.keyboard = search_keyboard
             bot.reply_to(event, f'Привет, {user}!')
         else:
-            bot.reply_to(event, 'Пора искать пару', search_keyboard)
+            bot.reply_to(event, 'Пора искать пару')
 
     @bot.message_handler(commands=['Искать'])
     def search(event):
@@ -64,7 +61,7 @@ if __name__ == '__main__':
             'city': user.city.get('id'),
         }
         requester.search_users(params)
-        bot.reply_to(event, 'Нашел', search_keyboard)
+        bot.reply_to(event, 'Нашел')
 
     bot.start_longpoll()
 

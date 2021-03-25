@@ -25,6 +25,15 @@ class VkBot:
 
         self.message_handlers = []
 
+        self._keyboard = VkKeyboard.get_empty_keyboard()
+
+    @property
+    def keyboard(self):
+        return self._keyboard
+
+    @keyboard.setter
+    def keyboard(self, value: VkKeyboard):
+        self._keyboard = value.get_keyboard()
 
     @staticmethod
     def _build_handler_dict(handler, **filters):
@@ -93,7 +102,7 @@ class VkBot:
             peer_id=peer_id,
             message=message,
             random_id=get_random_id(),
-            keyboard=keyboard
+            keyboard=self.keyboard
         )
 
     def reply_to(self, event, message, keyboard=None):
