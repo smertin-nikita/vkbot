@@ -62,6 +62,12 @@ if __name__ == '__main__':
         # else:
             # bot.reply_to(event, 'Пора искать пару')
 
+    @bot.message_handler(commands=['Возраст'])
+    def age(event):
+        bot.reply_to(event, 'Введите возраст поиска!')
+
+
+
     @bot.message_handler(commands=['Главная'])
     def default(event):
         bot.keyboard = default_keyboard
