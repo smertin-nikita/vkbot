@@ -48,6 +48,8 @@ if __name__ == '__main__':
     settings_keyboard.add_button('Пол', color=VkKeyboardColor.PRIMARY)
     settings_keyboard.add_button('Город', color=VkKeyboardColor.PRIMARY)
 
+
+
     @bot.message_handler()
     def start(event):
         if event.from_id not in users:
@@ -57,8 +59,13 @@ if __name__ == '__main__':
             users[event.from_id] = user
             bot.keyboard = default_keyboard
             bot.reply_to(event, f'Привет, {user}!')
-        else:
-            bot.reply_to(event, 'Пора искать пару')
+        # else:
+            # bot.reply_to(event, 'Пора искать пару')
+
+    @bot.message_handler(commands=['Главная'])
+    def default(event):
+        bot.keyboard = default_keyboard
+        bot.reply_to(event, 'Пора искать пару!')
 
     @bot.message_handler(commands=['Настройки'])
     def settings(event):
@@ -67,13 +74,16 @@ if __name__ == '__main__':
         user: VkUser = users[event.from_id]
         message = f'Ваши критерии поиска:' \
                   f'{user.search_settings}'
-        bot.reply_to(event, 'Ваши критерии поиска')
+        bot.reply_to(event, message)
+
 
     @bot.message_handler(commands=['Искать'])
     def search(event):
+
         user: VkUser = users[event.from_id]
         requester.search_users(user.search_settings)
         bot.reply_to(event, 'Нашел')
+
 
     bot.start_longpoll()
 
