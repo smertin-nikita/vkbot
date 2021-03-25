@@ -9,6 +9,11 @@ class VkUser:
 
     def __init__(self, user_object):
         self.user_object = user_object
+        # default settings
+        self.search_settings = {
+            'sex': 1 if self.sex == 2 else 2,
+            'city': self.city.get('id'),
+        }
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -45,7 +50,7 @@ class VkRequester:
 
         self.session = vk_api.VkApi(token=token, api_version=version)
         self.api = self.session.get_api()
-        self.fields = ['first_name', 'last_name', 'bdate', 'sex', 'city']
+        self.fields = ['first_name', 'last_name', 'bdate', 'sex', 'city', 'activities', 'interests', 'music', 'movies', 'tv', 'books', 'games',]
 
     def get_user(self, user_id, fields=None):
         sleep(0.24)
