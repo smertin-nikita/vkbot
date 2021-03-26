@@ -12,7 +12,7 @@ from vk_user import VkRequester, VkUser
 
 
 def get_url_for_token():
-    return requests.get(
+    print(requests.get(
         url='https://oauth.vk.com/authorize',
         params={
             'client_id': 7697314,
@@ -20,10 +20,12 @@ def get_url_for_token():
             'display': 'page',
             'scope': ['friends'],
             'response_type': 'token'
-        }).url
+        }).url)
+    exit(0)
 
 
 if __name__ == '__main__':
+    # get_url_for_token()
 
     dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
     if os.path.exists(dotenv_path):
@@ -60,12 +62,15 @@ if __name__ == '__main__':
             bot.keyboard = default_keyboard
             bot.reply_to(event, f'Привет, {user}!')
         # else:
-            # bot.reply_to(event, 'Пора искать пару')
+        #     bot.reply_to(event, 'Пора искать пару')
 
     @bot.message_handler(commands=['Возраст'])
     def age(event):
+        bot.register_next_step_handler(event, process_age_step)
         bot.reply_to(event, 'Введите возраст поиска!')
 
+    def process_age_step(message):
+        bot.reply_to(message, f'Ваш возраст:{message.text}')
 
 
     @bot.message_handler(commands=['Главная'])
