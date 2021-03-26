@@ -1,6 +1,7 @@
 import random
 import re
 from enum import Enum
+from pprint import pprint
 
 import requests
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
@@ -135,7 +136,16 @@ if __name__ == '__main__':
         if found_users['count']:
             ids = [u['id'] for u in found_users['items']]
             found_user = requester.get_user(random.choice(ids))
-            bot.reply_to(message, f'{found_user}: {found_user.href}')
+            # todo Не забыть убрать
+            pprint(found_user.user_object)
+            photos = requester.get_photos(found_user.id)
+            # Most liked and commened
+            photos = sorted(photos, key=lambda p: (p['likes']['count']), reverse=True)[0:3]
+            pprint(photos)
+            text = f"{found_user}: {found_user.href}\n"
+            bot.reply_to(message, text)
+            for photo in photos:
+                bot.send_message(message.from_id, message='text', attachment=f"{photo['sizes'][-1]['url']}")
         else:
             bot.reply_to(message, 'Не нашел')
 
