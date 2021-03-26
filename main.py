@@ -14,7 +14,7 @@ from vk_user import VkRequester, VkUser
 
 class Command(Enum):
 
-    find = 'Искать'
+    search = 'Искать'
     settings = 'Настройки'
     age = 'Возраст'
     sex = 'Пол'
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     users = {}
 
     default_keyboard = VkKeyboard(one_time=False)
-    default_keyboard.add_button(Command.find.value, color=VkKeyboardColor.PRIMARY)
+    default_keyboard.add_button(Command.search.value, color=VkKeyboardColor.PRIMARY)
     default_keyboard.add_button(Command.settings.value, color=VkKeyboardColor.SECONDARY)
 
     settings_keyboard = VkKeyboard(one_time=False)
@@ -74,10 +74,10 @@ if __name__ == '__main__':
 
     @bot.message_handler(commands=[Command.age.value])
     def age(message):
-        bot.register_next_step_handler(message, process_age_step)
+        bot.register_next_step_handler(message, answer_age_step)
         bot.reply_to(message, 'Введите возраст поиска. Например: 18 - 40!')
 
-    def process_age_step(message):
+    def answer_age_step(message):
         # todo Можно сделать регулярку для чтобы парсить разные варианты: от 18 до 40; 18 - 40; 18 40;
         text = message.text.replace(' ', '')
         match = re.match(r'(\d{2})-(\d{2})', text)
@@ -93,6 +93,23 @@ if __name__ == '__main__':
         else:
             bot.reply_to(message, 'Не понял')
 
+    @bot.message_handler(commands=[Command.sex.value])
+    def sex(message):
+        bot.register_next_step_handler(message, answer_sex_step)
+        bot.reply_to(message, 'Введите пол поиска. Например: ж')
+
+    def answer_sex_step(message):
+        # todo Можно сделать список для чтобы парсить разные варианты: м; ж; мужской; муж; женский; жен; и тд
+        text = message.text.replace(' ', '').lower()
+        print(text)
+        if text == 'ж' or text == 'м':
+
+            user: VkUser = users[message.from_id]
+            user.search_settings['sex'] = text
+
+            bot.reply_to(message, f'Ваш пол поиска {text}')
+        else:
+            bot.reply_to(message, 'Не понял')
 
     @bot.message_handler(commands=[Command.default.value])
     def default(message):
@@ -105,11 +122,11 @@ if __name__ == '__main__':
         # todo search settings не канает, так как не читабельный
         user: VkUser = users[message.from_id]
         text = f'Ваши критерии поиска:\n' \
-                  f'{user.search_settings}'
+               f'{user.search_settings}'
         bot.reply_to(message, text)
 
 
-    @bot.message_handler(commands=[Command.find.value])
+    @bot.message_handler(commands=[Command.search.value])
     def search(message):
 
         user: VkUser = users[message.from_id]
