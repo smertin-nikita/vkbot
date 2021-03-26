@@ -41,6 +41,10 @@ class VkUser:
         return f"{url}{self.user_object.get('id')}"
 
     @property
+    def id(self) -> str or None:
+        return self.user_object.get('id')
+
+    @property
     def first_name(self) -> str or None:
         return self.user_object.get('first_name')
 
@@ -66,7 +70,6 @@ class VkUser:
         return self.user_object.get('city')
 
 
-
 class VkRequester:
     def __init__(self, token=None, version='5.130'):
 
@@ -86,6 +89,24 @@ class VkRequester:
     def search_users(self, kwargs):
         return self.api.users.search(
             **kwargs,
+            count=1000,
             fields=self.fields
         )
+
+    def get_photos(self, user_id, album_id='profile'):
+        """Return photos by number of likes"""
+
+        params = {
+            'owner_id': user_id,
+            'album_id': album_id,
+            'extended': 1,
+            'count': 100,
+            'photo_sizes': 0
+        }
+
+        photos = self.api.photos.get(
+            **params
+        )
+        return photos['items']
+
 

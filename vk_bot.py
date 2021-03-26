@@ -181,15 +181,14 @@ class VkBot:
                 self._notify_next_handlers(message)
                 self._notify_command_handlers(message)
 
-    def send_message(self, peer_id, message, keyboard=None):
-        if keyboard:
-            keyboard = keyboard.get_keyboard()
+    def send_message(self, peer_id, message, **kwargs):
         self.vk_api.messages.send(
             peer_id=peer_id,
             message=message,
             random_id=get_random_id(),
-            keyboard=self.keyboard
+            keyboard=self.keyboard,
+            **kwargs
         )
 
-    def reply_to(self, message, text, keyboard=None):
-        self.send_message(message.peer_id, text, keyboard)
+    def reply_to(self, message, text):
+        self.send_message(message.peer_id, text)
