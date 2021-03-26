@@ -1,3 +1,4 @@
+import random
 import re
 from enum import Enum
 
@@ -82,14 +83,14 @@ if __name__ == '__main__':
         text = message.text.replace(' ', '')
         match = re.match(r'(\d{2})-(\d{2})', text)
         if match:
-            start_age = match.group(1)
-            end_age = match.group(2)
+            age_from = match.group(1)
+            age_to = match.group(2)
 
             user: VkUser = users[message.from_id]
-            user.search_settings['start_age'] = start_age
-            user.search_settings['end_age'] = end_age
+            user.search_settings['age_from'] = age_from
+            user.search_settings['end_age'] = age_to
 
-            bot.reply_to(message, f'Ваш возраст поиска от {start_age} до {end_age}')
+            bot.reply_to(message, f'Ваш возраст поиска от {age_from} до {age_to}')
         else:
             bot.reply_to(message, 'Не понял')
 
@@ -130,8 +131,13 @@ if __name__ == '__main__':
     def search(message):
 
         user: VkUser = users[message.from_id]
-        requester.search_users(user.search_settings)
-        bot.reply_to(message, 'Нашел')
+        found_users = requester.search_users(user.search_settings)
+        if found_users['count']:
+            ids = [u['id'] for u in found_users['items']]
+            found_user = requester.get_user(random.choice(ids))
+            bot.reply_to(message, f'{found_user}: {found_user.href}')
+        else:
+            bot.reply_to(message, 'Не нашел')
 
 
     bot.start_longpoll()

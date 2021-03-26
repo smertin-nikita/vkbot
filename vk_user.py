@@ -1,4 +1,5 @@
 from datetime import datetime
+from pprint import pprint
 from time import sleep
 
 from vk_api import vk_api
@@ -10,13 +11,34 @@ class VkUser:
     def __init__(self, user_object):
         self.user_object = user_object
         # default settings
+        from_list = [
+            user_object.get('activities'),
+            user_object.get('interests'),
+            user_object.get('music'),
+            user_object.get('movies'),
+            user_object.get('tv'),
+            user_object.get('books'),
+            user_object.get('games')
+        ]
+        print(from_list)
+
         self.search_settings = {
             'sex': 1 if self.sex == 2 else 2,
             'city': self.city.get('id'),
+            'age_from': 18,
+            'age_to': 30,
+            'has_photo': 1,
+            'is_closed': False,
+            # 'from_list': ['кино']
         }
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+    @property
+    def href(self) -> str:
+        url = 'vk.com/id'
+        return f"{url}{self.user_object.get('id')}"
 
     @property
     def first_name(self) -> str or None:
@@ -62,9 +84,8 @@ class VkRequester:
             return VkUser(user_object)
 
     def search_users(self, kwargs):
-        users = self.api.users.search(
+        return self.api.users.search(
             **kwargs,
             fields=self.fields
         )
-        print(users)
 
