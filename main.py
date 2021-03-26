@@ -14,11 +14,11 @@ from vk_user import VkRequester, VkUser
 
 class Command(Enum):
 
-    find = '/Искать'
-    settings = '/Настройки'
-    age = '/Возраст'
-    sex = '/Пол'
-    default = '/Главная'
+    find = 'Искать'
+    settings = 'Настройки'
+    age = 'Возраст'
+    sex = 'Пол'
+    default = 'Главная'
 
 
 def get_url_for_token():
@@ -61,21 +61,21 @@ if __name__ == '__main__':
 
 
     @bot.message_handler()
-    def start(event):
-        if event.from_id not in users:
-            print(event.from_id)
+    def start(message):
+        if message.from_id not in users:
+            print(message.from_id)
             # todo Возможен случай когда get_user = None. Возможно закрыт профайл или удален?
-            user = requester.get_user(event.from_id)
-            users[event.from_id] = user
+            user = requester.get_user(message.from_id)
+            users[message.from_id] = user
             bot.keyboard = default_keyboard
-            bot.reply_to(event, f'Привет, {user}!')
+            bot.reply_to(message, f'Привет, {user}!')
         # else:
         #     bot.reply_to(event, 'Пора искать пару')
 
     @bot.message_handler(commands=[Command.age.value])
-    def age(event):
-        bot.register_next_step_handler(event, process_age_step)
-        bot.reply_to(event, 'Введите возраст поиска. Например: 18 - 40!')
+    def age(message):
+        bot.register_next_step_handler(message, process_age_step)
+        bot.reply_to(message, 'Введите возраст поиска. Например: 18 - 40!')
 
     def process_age_step(message):
         # todo Можно сделать регулярку для чтобы парсить разные варианты: от 18 до 40; 18 - 40; 18 40;
@@ -85,32 +85,36 @@ if __name__ == '__main__':
             start_age = match.group(1)
             end_age = match.group(2)
 
+            user: VkUser = users[message.from_id]
+            user.search_settings['start_age'] = start_age
+            user.search_settings['end_age'] = end_age
+
             bot.reply_to(message, f'Ваш возраст поиска от {start_age} до {end_age}')
         else:
             bot.reply_to(message, 'Не понял')
 
 
     @bot.message_handler(commands=[Command.default.value])
-    def default(event):
+    def default(message):
         bot.keyboard = default_keyboard
-        bot.reply_to(event, 'Пора искать пару!')
+        bot.reply_to(message, 'Пора искать пару!')
 
     @bot.message_handler(commands=[Command.settings.value])
-    def settings(event):
+    def settings(message):
         bot.keyboard = settings_keyboard
         # todo search settings не канает, так как не читабельный
-        user: VkUser = users[event.from_id]
-        message = f'Ваши критерии поиска:\n' \
+        user: VkUser = users[message.from_id]
+        text = f'Ваши критерии поиска:\n' \
                   f'{user.search_settings}'
-        bot.reply_to(event, message)
+        bot.reply_to(message, text)
 
 
     @bot.message_handler(commands=[Command.find.value])
-    def search(event):
+    def search(message):
 
-        user: VkUser = users[event.from_id]
+        user: VkUser = users[message.from_id]
         requester.search_users(user.search_settings)
-        bot.reply_to(event, 'Нашел')
+        bot.reply_to(message, 'Нашел')
 
 
     bot.start_longpoll()
