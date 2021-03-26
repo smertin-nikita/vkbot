@@ -54,23 +54,22 @@ if __name__ == '__main__':
     default_keyboard.add_button(Command.settings.value, color=VkKeyboardColor.SECONDARY)
 
     settings_keyboard = VkKeyboard(one_time=False)
-    settings_keyboard.add_button(Command.main.value, color=VkKeyboardColor.SECONDARY)
+    settings_keyboard.add_button(Command.default.value, color=VkKeyboardColor.SECONDARY)
     settings_keyboard.add_button(Command.age.value, color=VkKeyboardColor.PRIMARY)
     settings_keyboard.add_button(Command.sex.value, color=VkKeyboardColor.PRIMARY)
 
 
-
-    @bot.message_handler()
+    @bot.message_handler(func=lambda msg: not msg.text.startswith('/'))
     def start(event):
         if event.from_id not in users:
             print(event.from_id)
-            # todo Возможен случай когда get_user = None.
+            # todo Возможен случай когда get_user = None. Возможно закрыт профайл или удален?
             user = requester.get_user(event.from_id)
             users[event.from_id] = user
             bot.keyboard = default_keyboard
             bot.reply_to(event, f'Привет, {user}!')
-        # else:
-        #     bot.reply_to(event, 'Пора искать пару')
+        else:
+            bot.reply_to(event, 'Пора искать пару')
 
     @bot.message_handler(commands=[Command.age.value])
     def age(event):
@@ -89,9 +88,9 @@ if __name__ == '__main__':
     @bot.message_handler(commands=[Command.settings.value])
     def settings(event):
         bot.keyboard = settings_keyboard
-
+        # todo search settings не канает, так как не читабельный
         user: VkUser = users[event.from_id]
-        message = f'Ваши критерии поиска:' \
+        message = f'Ваши критерии поиска:\n' \
                   f'{user.search_settings}'
         bot.reply_to(event, message)
 

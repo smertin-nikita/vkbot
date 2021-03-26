@@ -1,3 +1,4 @@
+import re
 
 import vk_api.vk_api
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
@@ -105,18 +106,36 @@ class VkBot:
     def _exec_task(self, task, *args, **kwargs):
         task(*args, **kwargs)
 
+    @staticmethod
+    def _test_filter(message_filter, filter_value, message):
+        """
+        Test filters
+        :param message_filter:
+        :param filter_value:
+        :param message:
+        :return:
+        """
+        test_cases = {
+            'regexp': lambda msg: re.search(filter_value, msg.text, re.IGNORECASE),
+            'commands': lambda msg: msg.text in filter_value,
+            'func': lambda msg: filter_value(msg)
+        }
+
+        return test_cases.get(message_filter, lambda msg: False)(message)
+
     def _test_message_handler(self, message_handler, message):
         """
         Test message handler
         :param message_handler:
-        :param event:
+        :param message:
         :return:
         """
         for message_filter, filter_value in message_handler['filters'].items():
             if filter_value is None:
                 continue
-            if message.text not in filter_value:
+            if not self._test_filter(message_filter, filter_value, message):
                 return False
+            # TODO не забыть удалить
             print(filter_value, message.text)
 
         return True
