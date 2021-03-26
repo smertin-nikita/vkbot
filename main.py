@@ -1,3 +1,5 @@
+from enum import Enum
+
 import requests
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
@@ -9,6 +11,13 @@ from dotenv import load_dotenv
 from vk_user import VkRequester, VkUser
 
 
+class Command(Enum):
+
+    find = '/Искать'
+    settings = '/Настройки'
+    age = '/Возраст'
+    sex = '/Пол'
+    default = '/Главная'
 
 
 def get_url_for_token():
@@ -41,14 +50,13 @@ if __name__ == '__main__':
     users = {}
 
     default_keyboard = VkKeyboard(one_time=False)
-    default_keyboard.add_button('Искать', color=VkKeyboardColor.PRIMARY)
-    default_keyboard.add_button('Настройки', color=VkKeyboardColor.SECONDARY)
+    default_keyboard.add_button(Command.find.value, color=VkKeyboardColor.PRIMARY)
+    default_keyboard.add_button(Command.settings.value, color=VkKeyboardColor.SECONDARY)
 
     settings_keyboard = VkKeyboard(one_time=False)
-    settings_keyboard.add_button('Главная', color=VkKeyboardColor.SECONDARY)
-    settings_keyboard.add_button('Возраст', color=VkKeyboardColor.PRIMARY)
-    settings_keyboard.add_button('Пол', color=VkKeyboardColor.PRIMARY)
-    settings_keyboard.add_button('Город', color=VkKeyboardColor.PRIMARY)
+    settings_keyboard.add_button(Command.main.value, color=VkKeyboardColor.SECONDARY)
+    settings_keyboard.add_button(Command.age.value, color=VkKeyboardColor.PRIMARY)
+    settings_keyboard.add_button(Command.sex.value, color=VkKeyboardColor.PRIMARY)
 
 
 
@@ -64,7 +72,7 @@ if __name__ == '__main__':
         # else:
         #     bot.reply_to(event, 'Пора искать пару')
 
-    @bot.message_handler(commands=['Возраст'])
+    @bot.message_handler(commands=[Command.age.value])
     def age(event):
         bot.register_next_step_handler(event, process_age_step)
         bot.reply_to(event, 'Введите возраст поиска!')
@@ -73,12 +81,12 @@ if __name__ == '__main__':
         bot.reply_to(message, f'Ваш возраст:{message.text}')
 
 
-    @bot.message_handler(commands=['Главная'])
+    @bot.message_handler(commands=[Command.default.value])
     def default(event):
         bot.keyboard = default_keyboard
         bot.reply_to(event, 'Пора искать пару!')
 
-    @bot.message_handler(commands=['Настройки'])
+    @bot.message_handler(commands=[Command.settings.value])
     def settings(event):
         bot.keyboard = settings_keyboard
 
@@ -88,7 +96,7 @@ if __name__ == '__main__':
         bot.reply_to(event, message)
 
 
-    @bot.message_handler(commands=['Искать'])
+    @bot.message_handler(commands=[Command.find.value])
     def search(event):
 
         user: VkUser = users[event.from_id]

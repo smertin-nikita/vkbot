@@ -6,6 +6,7 @@ from vk_api.utils import get_random_id
 from vk_api.bot_longpoll import VkBotLongPoll
 from vk_api.bot_longpoll import VkBotEventType
 
+
 class Handler:
     """
     Class for (next step|reply) handlers
