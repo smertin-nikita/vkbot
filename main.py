@@ -1,3 +1,4 @@
+import re
 from enum import Enum
 
 import requests
@@ -59,7 +60,7 @@ if __name__ == '__main__':
     settings_keyboard.add_button(Command.sex.value, color=VkKeyboardColor.PRIMARY)
 
 
-    @bot.message_handler(func=lambda msg: not msg.text.startswith('/'))
+    @bot.message_handler()
     def start(event):
         if event.from_id not in users:
             print(event.from_id)
@@ -68,16 +69,25 @@ if __name__ == '__main__':
             users[event.from_id] = user
             bot.keyboard = default_keyboard
             bot.reply_to(event, f'Привет, {user}!')
-        else:
-            bot.reply_to(event, 'Пора искать пару')
+        # else:
+        #     bot.reply_to(event, 'Пора искать пару')
 
     @bot.message_handler(commands=[Command.age.value])
     def age(event):
         bot.register_next_step_handler(event, process_age_step)
-        bot.reply_to(event, 'Введите возраст поиска!')
+        bot.reply_to(event, 'Введите возраст поиска. Например: 18 - 40!')
 
     def process_age_step(message):
-        bot.reply_to(message, f'Ваш возраст:{message.text}')
+        # todo Можно сделать регулярку для чтобы парсить разные варианты: от 18 до 40; 18 - 40; 18 40;
+        text = message.text.replace(' ', '')
+        match = re.match(r'(\d{2})-(\d{2})', text)
+        if match:
+            start_age = match.group(1)
+            end_age = match.group(2)
+
+            bot.reply_to(message, f'Ваш возраст поиска от {start_age} до {end_age}')
+        else:
+            bot.reply_to(message, 'Не понял')
 
 
     @bot.message_handler(commands=[Command.default.value])
