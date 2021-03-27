@@ -27,7 +27,7 @@ class VkUser:
         return f"{self.first_name} {self.last_name}"
 
     def get_readable_settings(self):
-        sex =  'Женский' if self.search_settings['sex'] == 2 else 'Мужской'
+        sex = 'Мужской' if self.search_settings['sex'] == 2 else 'Женский'
         city = self.city.get('title')
         return f"Пол: {sex}\n" \
                f"Город: {city}\n" \
