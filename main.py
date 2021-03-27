@@ -134,8 +134,10 @@ if __name__ == '__main__':
         user: VkUser = users[message.from_id]
         found_users = requester.search_users(user.search_settings)
         if found_users['count']:
-            ids = [u['id'] for u in found_users['items']]
+            # Получаем id только открытых профайлов
+            ids = [u['id'] for u in found_users['items'] if not u['is_closed']]
             found_user = requester.get_user(random.choice(ids))
+
             photos = requester.get_photos(found_user.id)
             # Most liked and commented
             photos = sorted(photos, key=lambda p: (p['likes']['count']), reverse=True)[0:3]

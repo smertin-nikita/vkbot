@@ -30,7 +30,6 @@ class VkUser:
             'age_from': 18,
             'age_to': 30,
             'has_photo': 1,
-            'is_closed': False,
             # 'from_list': ['кино']
         }
 
