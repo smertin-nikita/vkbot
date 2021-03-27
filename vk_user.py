@@ -1,7 +1,9 @@
 from datetime import datetime
+from io import BytesIO
 from pprint import pprint
 from time import sleep
 
+import requests
 from vk_api import vk_api
 from vk_api.vk_api import VkApiMethod
 

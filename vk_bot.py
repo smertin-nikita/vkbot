@@ -1,6 +1,9 @@
 import re
+from io import BytesIO
 
+import requests
 import vk_api.vk_api
+from vk_api import VkUpload
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
 from vk_api.utils import get_random_id
@@ -37,6 +40,7 @@ class VkBot:
         self.vk = vk_api.VkApi(token=token, api_version='5.130')
         self.long_poll = VkBotLongPoll(self.vk, group_id)
         self.vk_api = self.vk.get_api()
+        self.upload = VkUpload(self.vk_api)
 
         self.message_handlers = []
 
@@ -192,3 +196,26 @@ class VkBot:
 
     def reply_to(self, message, text):
         self.send_message(message.peer_id, text)
+
+    def _upload_photo(self, url):
+        img = requests.get(url).content
+        f = BytesIO(img)
+
+        response = self.upload.photo_messages(f)[0]
+
+        owner_id = response['owner_id']
+        photo_id = response['id']
+        access_key = response['access_key']
+
+        return owner_id, photo_id, access_key
+
+    def send_photo(self, peer_id, url):
+        owner_id, photo_id, access_key = self._upload_photo(url)
+        attachment = f'photo{owner_id}_{photo_id}_{access_key}'
+        self.vk_api.messages.send(
+            random_id=get_random_id(),
+            peer_id=peer_id,
+            attachment=attachment
+        )
+
+
