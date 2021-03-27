@@ -116,15 +116,14 @@ if __name__ == '__main__':
     @bot.message_handler(commands=[Command.default.value])
     def default(message):
         bot.keyboard = default_keyboard
-        bot.reply_to(message, 'Пора искать пару!')
+        bot.reply_to(message, 'Пора заводить новые знакомства!')
 
     @bot.message_handler(commands=[Command.settings.value])
     def settings(message):
         bot.keyboard = settings_keyboard
         # todo search settings не канает, так как не читабельный
         user: VkUser = users[message.from_id]
-        text = f'Ваши критерии поиска:\n' \
-               f'{user.search_settings}'
+        text = user.get_readable_settings()
         bot.reply_to(message, text)
 
 

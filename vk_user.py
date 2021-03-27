@@ -12,29 +12,27 @@ class VkUser:
 
     def __init__(self, user_object):
         self.user_object = user_object
-        # default settings
-        from_list = [
-            user_object.get('activities'),
-            user_object.get('interests'),
-            user_object.get('music'),
-            user_object.get('movies'),
-            user_object.get('tv'),
-            user_object.get('books'),
-            user_object.get('games')
-        ]
-        print(from_list)
 
+        # default settings
         self.search_settings = {
             'sex': 1 if self.sex == 2 else 2,
             'city': self.city.get('id'),
             'age_from': 18,
             'age_to': 30,
             'has_photo': 1,
-            # 'from_list': ['кино']
+            'sort': 1
         }
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+    def get_readable_settings(self):
+        sex =  'Женский' if self.search_settings['sex'] == 2 else 'Мужской'
+        city = self.city.get('title')
+        return f"Пол: {sex}\n" \
+               f"Город: {city}\n" \
+               f"Возраст: от {self.search_settings['age_from']} до {self.search_settings['age_to']}"
+
 
     @property
     def href(self) -> str:
@@ -76,7 +74,7 @@ class VkRequester:
 
         self.session = vk_api.VkApi(token=token, api_version=version)
         self.api = self.session.get_api()
-        self.fields = ['first_name', 'last_name', 'bdate', 'sex', 'city', 'activities', 'interests', 'music', 'movies', 'tv', 'books', 'games',]
+        self.fields = ['first_name', 'last_name', 'bdate', 'sex', 'city']
 
     def get_user(self, user_id, fields=None):
         sleep(0.24)
