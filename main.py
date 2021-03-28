@@ -21,6 +21,8 @@ class Command(Enum):
     age = 'Возраст'
     sex = 'Пол'
     default = 'Главная'
+    like = 'Лайк'
+    dislike = 'Дизлайк'
 
 
 def get_url_for_token():
@@ -61,12 +63,16 @@ if __name__ == '__main__':
     settings_keyboard.add_button(Command.age.value, color=VkKeyboardColor.PRIMARY)
     settings_keyboard.add_button(Command.sex.value, color=VkKeyboardColor.PRIMARY)
 
+    like_keyboard = VkKeyboard(one_time=False)
+    like_keyboard.add_button(Command.like.value, color=VkKeyboardColor.POSITIVE)
+    like_keyboard.add_button(Command.dislike.value, color=VkKeyboardColor.NEGATIVE)
+
 
     @bot.message_handler()
     def start(message):
         if message.from_id not in users:
             print(message.from_id)
-            # todo Возможен случай когда get_user = None. Возможно закрыт профайл или удален?
+            # todo Возможен случай когда get_user = None. Возможно  профайл  удален?
             user = requester.get_user(message.from_id)
             users[message.from_id] = user
             bot.keyboard = default_keyboard
@@ -121,10 +127,24 @@ if __name__ == '__main__':
     @bot.message_handler(commands=[Command.settings.value])
     def settings(message):
         bot.keyboard = settings_keyboard
-        # todo search settings не канает, так как не читабельный
+
         user: VkUser = users[message.from_id]
         text = user.get_readable_settings()
         bot.reply_to(message, text)
+
+    @bot.message_handler(commands=[Command.like.value])
+    def like(message):
+        bot.keyboard = default_keyboard
+
+        # todo Сохранить результат
+        bot.reply_to(message, "Отличный выбор!")
+
+    @bot.message_handler(commands=[Command.dislike.value])
+    def dislike(message):
+        bot.keyboard = default_keyboard
+
+        # todo Сохранить результат
+        bot.reply_to(message, 'Ты еще найдешь себе друга!')
 
 
     @bot.message_handler(commands=[Command.search.value])
@@ -133,6 +153,8 @@ if __name__ == '__main__':
         user: VkUser = users[message.from_id]
         found_users = requester.search_users(user.search_settings)
         if found_users['count']:
+
+            bot.keyboard = like_keyboard
             # Получаем id только открытых профайлов
             ids = [u['id'] for u in found_users['items'] if not u['is_closed']]
             found_user = requester.get_user(random.choice(ids))
@@ -144,6 +166,7 @@ if __name__ == '__main__':
             bot.reply_to(message, text)
             for photo in photos:
                 bot.send_photo(message.from_id, photo['sizes'][-1]['url'])
+
         else:
             bot.reply_to(message, 'Не нашел')
 
