@@ -1,13 +1,27 @@
 import sqlalchemy as sq
-from sqlalchemy.orm import declarative_base
+
+import datetime
+
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, TIMESTAMP
 
 Base = declarative_base()
 
 
-class VkUser(Base):
+class BaseModel(Base):
+    __abstract__ = True
+
+    id = Column(Integer, nullable=False, unique=True, primary_key=True, autoincrement=True)
+    created_at = Column(TIMESTAMP, nullable=False, default=datetime.datetime.now())
+    updated_at = Column(TIMESTAMP, nullable=False, default=datetime.datetime.now(), onupdate=datetime.datetime.now())
+
+    def __repr__(self):
+        return "<{0.__class__.__name__}(id={0.id!r})>".format(self)
+
+
+class VkUser(BaseModel):
     __tablename__ = 'vk_user'
 
-    id = sq.Column(sq.Integer, primary_key=True, unique=True, autoincrement=True)
     vk_id = sq.Column(sq.Integer, nullable=False, unique=True)
     firstname = sq.Column(sq.VARCHAR(60), nullable=False)
     lastname = sq.Column(sq.VARCHAR(60), nullable=False)
@@ -19,18 +33,16 @@ class VkUser(Base):
     age_from = sq.Column(sq.Integer, nullable=False)
 
 
-class UserLike(Base):
+class UserLike(BaseModel):
     __tablename__ = 'user_like'
 
-    id = sq.Column(sq.Integer, primary_key=True, unique=True, autoincrement=True)
     vk_id = sq.Column(sq.Integer, sq.ForeignKey('vk_user.id', ondelete='CASCADE'), nullable=False, unique=True)
     like_id = sq.Column(sq.Integer, nullable=False)
 
 
-class UserDislike(Base):
+class UserDislike(BaseModel):
     __tablename__ = 'user_dislike'
 
-    id = sq.Column(sq.Integer, primary_key=True, unique=True, autoincrement=True)
     vk_id = sq.Column(sq.Integer, sq.ForeignKey('vk_user.id', ondelete='CASCADE'), nullable=False, unique=True)
     dislike_id = sq.Column(sq.Integer, nullable=False)
 
