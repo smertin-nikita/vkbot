@@ -4,6 +4,8 @@ from enum import Enum
 from pprint import pprint
 
 import requests
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
 import vk_bot
@@ -11,6 +13,7 @@ import vk_bot
 import os
 from dotenv import load_dotenv
 
+from db.db_session import DBSession
 from vk_user import VkRequester, VkUser
 
 
@@ -48,9 +51,21 @@ if __name__ == '__main__':
     community_token = os.environ.get("FULL_TOKEN")
     group_id = os.environ.get("GROUP_ID")
     user_token = os.environ.get('USER_TOKEN')
+    db_user = os.environ.get('DATABASE_USER')
+    db_password = os.environ.get('DATABASE_PASSWORD')
+    db_host = os.environ.get('DATABASE_HOST')
+    db_port = os.environ.get('DATABASE_PORT')
+    db_name = os.environ.get('DATABASE_NAME')
 
     bot = vk_bot.VkBot(community_token, group_id)
     requester = VkRequester(token=user_token)
+
+    engine = create_engine(
+        f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
+    )
+    session_factory = sessionmaker(bind=engine)
+    db_session = DBSession(session_factory())
+
 
     users = {}
 
