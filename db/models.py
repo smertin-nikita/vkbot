@@ -19,7 +19,7 @@ class BaseModel(Base):
         return "<{0.__class__.__name__}(id={0.id!r})>".format(self)
 
 
-class VkUser(BaseModel):
+class VkUserModel(BaseModel):
     __tablename__ = 'vk_user'
 
     vk_id = sq.Column(sq.Integer, nullable=False, unique=True)
@@ -33,14 +33,14 @@ class VkUser(BaseModel):
     age_from = sq.Column(sq.Integer, nullable=False)
 
 
-class UserLike(BaseModel):
+class UserLikeModel(BaseModel):
     __tablename__ = 'user_like'
 
     vk_id = sq.Column(sq.Integer, sq.ForeignKey('vk_user.id', ondelete='CASCADE'), nullable=False, unique=True)
     like_id = sq.Column(sq.Integer, nullable=False)
 
 
-class UserDislike(BaseModel):
+class UserDislikeModel(BaseModel):
     __tablename__ = 'user_dislike'
 
     vk_id = sq.Column(sq.Integer, sq.ForeignKey('vk_user.id', ondelete='CASCADE'), nullable=False, unique=True)

@@ -3,6 +3,7 @@ import re
 from enum import Enum
 from pprint import pprint
 
+import psycopg2
 import requests
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -14,6 +15,7 @@ import os
 from dotenv import load_dotenv
 
 from db.db_session import DBSession
+from db.models import VkUserModel
 from vk_user import VkRequester, VkUser
 
 
@@ -41,8 +43,17 @@ def get_url_for_token():
     exit(0)
 
 
+
+def get_vk_user(DSN, vk_id):
+    connect = psycopg2.connect(DSN)
+    with connect.cursor()as cursor:
+        vk_user = cursor.execute(f"SELECT vk_id FROM vk_user where vk_id = {vk_id}")
+        print(vk_user)
+
 if __name__ == '__main__':
     # get_url_for_token()
+
+
 
     dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
     if os.path.exists(dotenv_path):
@@ -60,12 +71,13 @@ if __name__ == '__main__':
     bot = vk_bot.VkBot(community_token, group_id)
     requester = VkRequester(token=user_token)
 
-    engine = create_engine(
-        f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
-    )
-    session_factory = sessionmaker(bind=engine)
-    db_session = DBSession(session_factory())
+    # engine = create_engine(
+    #     f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
+    # )
+    # session_factory = sessionmaker(bind=engine)
+    # db_session = DBSession(session_factory())
 
+    DNS = f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
 
     users = {}
 
@@ -83,9 +95,13 @@ if __name__ == '__main__':
     like_keyboard.add_button(Command.dislike.value, color=VkKeyboardColor.NEGATIVE)
 
 
+
     @bot.message_handler()
     def start(message):
-        if message.from_id not in users:
+        # if message.from_id not in users:
+        # todo Как избавиться от глобальных переменных функии декоратора??
+        print('start')
+        if get_vk_user(DNS, message.from_id):
             print(message.from_id)
             # todo Возможен случай когда get_user = None. Возможно  профайл  удален?
             user = requester.get_user(message.from_id)
