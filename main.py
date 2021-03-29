@@ -6,7 +6,7 @@ from pprint import pprint
 import psycopg2
 import requests
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
 import vk_bot
@@ -14,9 +14,8 @@ import vk_bot
 import os
 from dotenv import load_dotenv
 
-from db.db_session import DBSession
-from db.models import VkUserModel
-from vk_user import VkRequester, VkUser
+from db.models import VkUser, Base, UserLike, UserDislike
+from vk_requester import VkRequester, VkUser
 
 
 class Command(Enum):
@@ -28,6 +27,7 @@ class Command(Enum):
     default = 'Главная'
     like = 'Лайк'
     dislike = 'Дизлайк'
+    hello = ['привет', 'Привет', 'хай', 'Здорова']
 
 
 def get_url_for_token():
@@ -43,17 +43,47 @@ def get_url_for_token():
     exit(0)
 
 
+def get_vk_user(session, vk_id: int):
+    vk_user = session.query(VkUser).where(VkUser.vk_id == vk_id).one_or_none()
+    return vk_user
 
-def get_vk_user(DSN, vk_id):
-    connect = psycopg2.connect(DSN)
-    with connect.cursor()as cursor:
-        vk_user = cursor.execute(f"SELECT vk_id FROM vk_user where vk_id = {vk_id}")
-        print(vk_user)
+
+def add_user_like(session, vk_id, like_id):
+    session.add(UserLike(vk_id, like_id))
+    session.commit()
+
+
+def add_user_dislike(session, vk_id, like_id):
+    session.add(UserDislike(vk_id, like_id))
+    session.commit()
+
+
+def add_vk_user(session, user: VkUser):
+    session.add(user)
+    session.commit()
+
+def update_search_age(session, vk_id: int, age_from: int, age_to: int):
+    session.query(VkUser).where(VkUser.vk_id == vk_id).update({
+        'age_from': age_from,
+        'age_to': age_to
+    })
+
+
+def update_search_sex(session, vk_id: int, search_sex: bool):
+    session.query(VkUser).where(VkUser.vk_id == vk_id).update({
+        'search_sex': search_sex
+    })
+
+
+def get_readable_settings(vk_user: VkUser):
+    sex = 'Мужчину' if vk_user.search_sex else 'Женщину'
+    return f"Искать: {sex}\n" \
+           f"В городе: {vk_user.city_title}\n" \
+           f"Возраст: от {vk_user.age_from} до {vk_user.age_to}"
+
 
 if __name__ == '__main__':
     # get_url_for_token()
-
-
 
     dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
     if os.path.exists(dotenv_path):
@@ -71,14 +101,12 @@ if __name__ == '__main__':
     bot = vk_bot.VkBot(community_token, group_id)
     requester = VkRequester(token=user_token)
 
-    # engine = create_engine(
-    #     f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
-    # )
-    # session_factory = sessionmaker(bind=engine)
-    # db_session = DBSession(session_factory())
-
-    DNS = f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
-
+    engine = create_engine(
+        f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
+    )
+    # Base.metadata.create_all(engine)
+    session_factory = sessionmaker(bind=engine)
+    db_session = session_factory()
     users = {}
 
     default_keyboard = VkKeyboard(one_time=False)
@@ -95,21 +123,21 @@ if __name__ == '__main__':
     like_keyboard.add_button(Command.dislike.value, color=VkKeyboardColor.NEGATIVE)
 
 
-
-    @bot.message_handler()
-    def start(message):
-        # if message.from_id not in users:
+    @bot.message_handler(commands=Command.hello.value)
+    def hello(message):
+        user = get_vk_user(db_session, message.from_id)
         # todo Как избавиться от глобальных переменных функии декоратора??
-        print('start')
-        if get_vk_user(DNS, message.from_id):
+        if user:
+            bot.keyboard = default_keyboard
+            bot.reply_to(message, f'Привет {user.firstname} {user.lastname}, пора искать пару!')
+        else:
             print(message.from_id)
             # todo Возможен случай когда get_user = None. Возможно  профайл  удален?
             user = requester.get_user(message.from_id)
-            users[message.from_id] = user
+            add_vk_user(db_session, user)
+
             bot.keyboard = default_keyboard
-            bot.reply_to(message, f'Привет, {user}!')
-        # else:
-        #     bot.reply_to(event, 'Пора искать пару')
+            bot.reply_to(message, f'Привет, {user.firstname} {user.lastname}!')
 
     @bot.message_handler(commands=[Command.age.value])
     def age(message):
@@ -124,10 +152,9 @@ if __name__ == '__main__':
             age_from = match.group(1)
             age_to = match.group(2)
 
-            user: VkUser = users[message.from_id]
-            user.search_settings['age_from'] = age_from
-            user.search_settings['end_age'] = age_to
+            update_search_age(db_session, message.from_id, int(age_from), int(age_to))
 
+            bot.keyboard = settings_keyboard
             bot.reply_to(message, f'Ваш возраст поиска от {age_from} до {age_to}')
         else:
             bot.reply_to(message, 'Не понял')
@@ -142,10 +169,11 @@ if __name__ == '__main__':
         text = message.text.replace(' ', '').lower()
         print(text)
         if text == 'ж' or text == 'м':
+            sex_id = {'ж': False, 'м': True}
 
-            user: VkUser = users[message.from_id]
-            user.search_settings['sex'] = text
+            update_search_sex(db_session, message.from_id, sex_id[text])
 
+            bot.keyboard = settings_keyboard
             bot.reply_to(message, f'Ваш пол поиска {text}')
         else:
             bot.reply_to(message, 'Не понял')
@@ -159,8 +187,8 @@ if __name__ == '__main__':
     def settings(message):
         bot.keyboard = settings_keyboard
 
-        user: VkUser = users[message.from_id]
-        text = user.get_readable_settings()
+        user = get_vk_user(db_session, message.from_id)
+        text = get_readable_settings(user)
         bot.reply_to(message, text)
 
     @bot.message_handler(commands=[Command.like.value])
@@ -181,24 +209,33 @@ if __name__ == '__main__':
     @bot.message_handler(commands=[Command.search.value])
     def search(message):
 
-        user: VkUser = users[message.from_id]
-        found_users = requester.search_users(user.search_settings)
-        if found_users['count']:
+        user = get_vk_user(db_session, message.from_id)
+        found_users = requester.search_users(
+            sex=2 if user.search_sex else 1,
+            city=user.city_id,
+            age_from=user.age_from,
+            age_to=user.age_to
+        )
 
+        if found_users['count']:
             bot.keyboard = like_keyboard
+
             # Получаем id только открытых профайлов
             ids = [u['id'] for u in found_users['items'] if not u['is_closed']]
-            found_user = requester.get_user(random.choice(ids))
+            found_user = requester.search_user(random.choice(ids))
 
-            photos = requester.get_photos(found_user.id)
+            photos = requester.get_photos(found_user['id'])
             # Most liked and commented
             photos = sorted(photos, key=lambda p: (p['likes']['count']), reverse=True)[0:3]
-            text = f"{found_user}: {found_user.href}\n"
+            href = f"vk.com/id{found_user['id']}"
+            text = f"{found_user['first_name']} {found_user['last_name']}: {href}\n"
+
             bot.reply_to(message, text)
             for photo in photos:
-                bot.send_photo(message.from_id, photo['sizes'][-1]['url'])
+                bot.send_photo(message.from_id, photo['sizes'][0]['url'])
 
         else:
+            bot.keyboard = default_keyboard
             bot.reply_to(message, 'Не нашел')
 
 

@@ -1,48 +1,39 @@
 import sqlalchemy as sq
 
-import datetime
-
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, TIMESTAMP
+from sqlalchemy import Column, Integer, TIMESTAMP, create_engine
+from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
 
-class BaseModel(Base):
-    __abstract__ = True
-
-    id = Column(Integer, nullable=False, unique=True, primary_key=True, autoincrement=True)
-    created_at = Column(TIMESTAMP, nullable=False, default=datetime.datetime.now())
-    updated_at = Column(TIMESTAMP, nullable=False, default=datetime.datetime.now(), onupdate=datetime.datetime.now())
-
-    def __repr__(self):
-        return "<{0.__class__.__name__}(id={0.id!r})>".format(self)
-
-
-class VkUserModel(BaseModel):
+# todo Можно ли наполнять модели дополнительнымы функционалом? Вроде как нет
+class VkUser(Base):
     __tablename__ = 'vk_user'
 
+    id = Column(Integer, nullable=False, unique=True, primary_key=True, autoincrement=True)
     vk_id = sq.Column(sq.Integer, nullable=False, unique=True)
     firstname = sq.Column(sq.VARCHAR(60), nullable=False)
     lastname = sq.Column(sq.VARCHAR(60), nullable=False)
     bdate = sq.Column(sq.DATE, nullable=False)
-    sex = sq.Column(sq.BINARY)
-    city = sq.Column(sq.Integer, nullable=False)
-    search_sex = sq.Column(sq.BINARY, nullable=False)
+    sex = sq.Column(sq.BOOLEAN)
+    city_id = sq.Column(sq.Integer, nullable=False)
+    city_title = sq.Column(sq.VARCHAR(60), nullable=False)
+    search_sex = sq.Column(sq.BOOLEAN, nullable=False)
     age_to = sq.Column(sq.Integer, nullable=False)
     age_from = sq.Column(sq.Integer, nullable=False)
 
 
-class UserLikeModel(BaseModel):
+class UserLike(Base):
     __tablename__ = 'user_like'
 
+    id = Column(Integer, nullable=False, unique=True, primary_key=True, autoincrement=True)
     vk_id = sq.Column(sq.Integer, sq.ForeignKey('vk_user.id', ondelete='CASCADE'), nullable=False, unique=True)
     like_id = sq.Column(sq.Integer, nullable=False)
 
 
-class UserDislikeModel(BaseModel):
+class UserDislike(Base):
     __tablename__ = 'user_dislike'
 
+    id = Column(Integer, nullable=False, unique=True, primary_key=True, autoincrement=True)
     vk_id = sq.Column(sq.Integer, sq.ForeignKey('vk_user.id', ondelete='CASCADE'), nullable=False, unique=True)
     dislike_id = sq.Column(sq.Integer, nullable=False)
-
