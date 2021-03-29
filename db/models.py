@@ -14,7 +14,6 @@ class VkUser(Base):
     vk_id = sq.Column(sq.Integer, nullable=False, unique=True)
     firstname = sq.Column(sq.VARCHAR(60), nullable=False)
     lastname = sq.Column(sq.VARCHAR(60), nullable=False)
-    bdate = sq.Column(sq.DATE, nullable=False)
     sex = sq.Column(sq.BOOLEAN)
     city_id = sq.Column(sq.Integer, nullable=False)
     city_title = sq.Column(sq.VARCHAR(60), nullable=False)
