@@ -139,8 +139,6 @@ class VkBot:
                 continue
             if not self._test_filter(message_filter, filter_value, message):
                 return False
-            # TODO не забыть удалить
-            print(filter_value, message.text)
 
         return True
 

@@ -49,18 +49,19 @@ def get_vk_user(session, vk_id: int):
 
 
 def add_user_like(session, vk_id, like_id):
-    session.add(UserLike(vk_id, like_id))
+    session.add(UserLike(vk_id=vk_id, like_id=like_id))
     session.commit()
 
 
-def add_user_dislike(session, vk_id, like_id):
-    session.add(UserDislike(vk_id, like_id))
+def add_user_dislike(session, vk_id, dislike_id):
+    session.add(UserDislike(vk_id=vk_id, dislike_id=dislike_id))
     session.commit()
 
 
 def add_vk_user(session, user: VkUser):
     session.add(user)
     session.commit()
+
 
 def update_search_age(session, vk_id: int, age_from: int, age_to: int):
     session.query(VkUser).where(VkUser.vk_id == vk_id).update({
@@ -191,19 +192,15 @@ if __name__ == '__main__':
         text = get_readable_settings(user)
         bot.reply_to(message, text)
 
-    @bot.message_handler(commands=[Command.like.value])
-    def like(message):
+    def like_dislike(message, vk_id):
         bot.keyboard = default_keyboard
 
-        # todo Сохранить результат
-        bot.reply_to(message, "Отличный выбор!")
-
-    @bot.message_handler(commands=[Command.dislike.value])
-    def dislike(message):
-        bot.keyboard = default_keyboard
-
-        # todo Сохранить результат
-        bot.reply_to(message, 'Ты еще найдешь себе друга!')
+        if message.text == Command.like:
+            add_user_like(db_session, message.from_id, vk_id)
+            bot.reply_to(message, "Отличный выбор!")
+        else:
+            add_user_dislike(db_session, message.from_id, vk_id)
+            bot.reply_to(message, 'Ты еще найдешь себе друга!')
 
 
     @bot.message_handler(commands=[Command.search.value])
@@ -220,7 +217,9 @@ if __name__ == '__main__':
         if found_users['count']:
             bot.keyboard = like_keyboard
 
-            # Получаем id только открытых профайлов
+            # todo Получить из бд dislike id и отфильтровать по ним
+
+            # Получаем id только открытых профайлов и не dislike
             ids = [u['id'] for u in found_users['items'] if not u['is_closed']]
             found_user = requester.search_user(random.choice(ids))
 
@@ -230,6 +229,7 @@ if __name__ == '__main__':
             href = f"vk.com/id{found_user['id']}"
             text = f"{found_user['first_name']} {found_user['last_name']}: {href}\n"
 
+            bot.register_next_step_handler(message, like_dislike, found_user['id'])
             bot.reply_to(message, text)
             for photo in photos:
                 bot.send_photo(message.from_id, photo['sizes'][0]['url'])
