@@ -1,6 +1,6 @@
 import sqlalchemy as sq
 
-from sqlalchemy import Column, Integer, TIMESTAMP, create_engine
+from sqlalchemy import Column, Integer
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
