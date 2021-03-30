@@ -13,6 +13,7 @@ import os
 from dotenv import load_dotenv
 
 import db.queries as query
+from db.models import Base
 from vk_requester import VkRequester, VkUser
 
 
@@ -95,19 +96,31 @@ if __name__ == '__main__':
 
     @bot.message_handler(commands=Command.hello.value)
     def hello(message):
+        bot.keyboard = default_keyboard
         user = query.get_vk_user(db_session, message.from_id)
         # todo Как избавиться от глобальных переменных функии декоратора??
         if user:
-            bot.keyboard = default_keyboard
             bot.reply_to(message, f'Привет {user.firstname} {user.lastname}, пора искать пару!')
         else:
-            print(message.from_id)
             # todo Возможен случай когда get_user = None. Возможно  профайл  удален?
-            user = requester.get_user(message.from_id)
-            query.add_vk_user(db_session, user)
+            user_object = requester.get_user(message.from_id)
+            if user_object:
+                query.add_vk_user(db_session, VkUser(
+                    vk_id=user_object['id'],
+                    firstname=user_object['first_name'],
+                    lastname=user_object['last_name'],
+                    sex=True if user_object['sex'] == 2 else False,
+                    city_id=user_object['city']['id'],
+                    city_title=user_object['city']['title'],
+                    search_sex=False if user_object['sex'] == 2 else True,
+                    age_from=18,
+                    age_to=30
+                ))
 
-            bot.keyboard = default_keyboard
-            bot.reply_to(message, f'Привет, {user.firstname} {user.lastname}!')
+                bot.reply_to(message, f'Привет, {user_object["first_name"]} {user_object["last_name"]}!')
+            else:
+                bot.reply_to(message, f'Привет, кто ты?!')
+
 
     @bot.message_handler(commands=[Command.age.value])
     def age(message):
@@ -164,7 +177,7 @@ if __name__ == '__main__':
     def like_dislike(message, vk_id):
         bot.keyboard = default_keyboard
 
-        if message.text == Command.like:
+        if message.text == Command.like.value:
             query.add_user_like(db_session, message.from_id, vk_id)
             bot.reply_to(message, "Отличный выбор!")
         else:
@@ -190,10 +203,10 @@ if __name__ == '__main__':
 
             # Получаем id только открытых профайлов и не dislike
             ids = [u['id'] for u in found_users['items'] if not u['is_closed']]
-            found_user = requester.search_user(random.choice(ids))
+            found_user = requester.get_user(random.choice(ids))
 
             photos = requester.get_photos(found_user['id'])
-            # Most liked and commented
+            # Most liked and can add most commented
             photos = sorted(photos, key=lambda p: (p['likes']['count']), reverse=True)[0:3]
             href = f"vk.com/id{found_user['id']}"
             text = f"{found_user['first_name']} {found_user['last_name']}: {href}\n"

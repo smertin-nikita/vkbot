@@ -23,6 +23,7 @@ def add_user_like(session, vk_id, like_id):
     :param like_id: Who is being liked
     :return:
     """
+    # todo Добавить проверку если лайк уже есть
     session.add(UserLike(vk_id=vk_id, like_id=like_id))
     session.commit()
 
@@ -35,6 +36,7 @@ def add_user_dislike(session, vk_id, dislike_id):
     :param dislike_id: Who is being disliked
     :return:
     """
+    # todo Добавить проверку если дизлак уже есть
     session.add(UserDislike(vk_id=vk_id, dislike_id=dislike_id))
     session.commit()
 

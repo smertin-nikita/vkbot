@@ -26,7 +26,7 @@ class UserLike(Base):
     __tablename__ = 'user_like'
 
     id = Column(Integer, nullable=False, unique=True, primary_key=True, autoincrement=True)
-    vk_id = sq.Column(sq.Integer, sq.ForeignKey('vk_user.vk_id', ondelete='CASCADE'), nullable=False, unique=True)
+    vk_id = sq.Column(sq.Integer, sq.ForeignKey('vk_user.vk_id', ondelete='CASCADE'), nullable=False)
     like_id = sq.Column(sq.Integer, nullable=False)
 
 
@@ -34,5 +34,5 @@ class UserDislike(Base):
     __tablename__ = 'user_dislike'
 
     id = Column(Integer, nullable=False, unique=True, primary_key=True, autoincrement=True)
-    vk_id = sq.Column(sq.Integer, sq.ForeignKey('vk_user.vk_id', ondelete='CASCADE'), nullable=False, unique=True)
+    vk_id = sq.Column(sq.Integer, sq.ForeignKey('vk_user.vk_id', ondelete='CASCADE'), nullable=False)
     dislike_id = sq.Column(sq.Integer, nullable=False)
