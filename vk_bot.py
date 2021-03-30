@@ -4,7 +4,7 @@ from io import BytesIO
 import requests
 import vk_api.vk_api
 from vk_api import VkUpload
-from vk_api.keyboard import VkKeyboard, VkKeyboardColor
+from vk_api.keyboard import VkKeyboard
 
 from vk_api.utils import get_random_id
 from vk_api.bot_longpoll import VkBotLongPoll
@@ -26,6 +26,9 @@ class Handler:
 
 
 class BotMessage:
+    """
+    Class wrapper for text messages
+    """
     def __init__(self, event):
         print(event)
         self.date = event.obj.message['date']
@@ -36,7 +39,11 @@ class BotMessage:
 
 class VkBot:
     def __init__(self, token, group_id):
+        """
 
+        :param token: Vk community token
+        :param group_id: vk community id
+        """
         self.vk = vk_api.VkApi(token=token, api_version='5.130')
         self.long_poll = VkBotLongPoll(self.vk, group_id)
         self.vk_api = self.vk.get_api()
@@ -85,7 +92,7 @@ class VkBot:
 
     def _notify_next_handlers(self, message):
         """
-        Description: TBD
+        Notify next handlers
         :param message:
         :return:
         """
@@ -143,7 +150,14 @@ class VkBot:
         return True
 
     def message_handler(self, commands=None, **kwargs):
-
+        """
+        Message handler decorator.
+        This decorator can be used to decorate functions that must handle text messages.
+        All message handlers are tested in the order they were added.
+        :param commands:
+        :param kwargs:
+        :return:
+        """
         def decorator(handler):
             handler_dict = self._build_handler_dict(handler,
                                                     commands=commands,
@@ -164,8 +178,7 @@ class VkBot:
     def _notify_command_handlers(self, message):
         """
         Notifies command handlers
-        :param handlers:
-        :param new_messages:
+        :param message:
         :return:
         """
         if len(self.message_handlers) == 0:
@@ -173,7 +186,6 @@ class VkBot:
         for message_handler in self.message_handlers:
             if self._test_message_handler(message_handler, message):
                 self._exec_task(message_handler['function'], message)
-                # break
 
     def start_longpoll(self):
         for event in self.long_poll.listen():
@@ -183,19 +195,37 @@ class VkBot:
                 self._notify_next_handlers(message)
                 self._notify_command_handlers(message)
 
-    def send_message(self, peer_id, message, **kwargs):
+    def send_message(self, peer_id, text, **kwargs):
+        """
+        Sends text messages
+        :param peer_id: receiver
+        :param text: message text
+        :param kwargs:
+        :return:
+        """
         self.vk_api.messages.send(
             peer_id=peer_id,
-            message=message,
+            message=text,
             random_id=get_random_id(),
             keyboard=self.keyboard,
             **kwargs
         )
 
     def reply_to(self, message, text):
+        """
+        Convenience function for `send_message(message.peer_id, text)`
+        :param message:
+        :param text:
+        :return:
+        """
         self.send_message(message.peer_id, text)
 
-    def _upload_photo(self, url):
+    def _load_photo(self, url):
+        """
+        Loads photo from URL to prepare it for send.
+        :param url:
+        :return: photo params
+        """
         img = requests.get(url).content
         f = BytesIO(img)
 
@@ -208,7 +238,13 @@ class VkBot:
         return owner_id, photo_id, access_key
 
     def send_photo(self, peer_id, url):
-        owner_id, photo_id, access_key = self._upload_photo(url)
+        """
+        Sends photo
+        :param peer_id:
+        :param url:
+        :return:
+        """
+        owner_id, photo_id, access_key = self._load_photo(url)
         attachment = f'photo{owner_id}_{photo_id}_{access_key}'
         self.vk_api.messages.send(
             random_id=get_random_id(),
