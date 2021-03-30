@@ -1,8 +1,6 @@
-from datetime import datetime
 from time import sleep
 
 from vk_api import vk_api
-from db.models import VkUser
 
 
 class VkRequester:
