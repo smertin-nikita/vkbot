@@ -1,12 +1,10 @@
 import random
 import re
 from enum import Enum
-from pprint import pprint
 
-import psycopg2
 import requests
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
 import vk_bot
@@ -14,7 +12,7 @@ import vk_bot
 import os
 from dotenv import load_dotenv
 
-from db.models import VkUser, Base, UserLike, UserDislike
+import db.queries as query
 from vk_requester import VkRequester, VkUser
 
 
@@ -31,6 +29,10 @@ class Command(Enum):
 
 
 def get_url_for_token():
+    """
+    Print url to get user token
+    :return:
+    """
     print(requests.get(
         url='https://oauth.vk.com/authorize',
         params={
@@ -41,9 +43,6 @@ def get_url_for_token():
             'response_type': 'token'
         }).url)
     exit(0)
-
-
-
 
 
 def get_readable_settings(vk_user: VkUser):
@@ -96,7 +95,7 @@ if __name__ == '__main__':
 
     @bot.message_handler(commands=Command.hello.value)
     def hello(message):
-        user = get_vk_user(db_session, message.from_id)
+        user = query.get_vk_user(db_session, message.from_id)
         # todo Как избавиться от глобальных переменных функии декоратора??
         if user:
             bot.keyboard = default_keyboard
@@ -105,7 +104,7 @@ if __name__ == '__main__':
             print(message.from_id)
             # todo Возможен случай когда get_user = None. Возможно  профайл  удален?
             user = requester.get_user(message.from_id)
-            add_vk_user(db_session, user)
+            query.add_vk_user(db_session, user)
 
             bot.keyboard = default_keyboard
             bot.reply_to(message, f'Привет, {user.firstname} {user.lastname}!')
@@ -123,7 +122,7 @@ if __name__ == '__main__':
             age_from = match.group(1)
             age_to = match.group(2)
 
-            update_search_age(db_session, message.from_id, int(age_from), int(age_to))
+            query.update_search_age(db_session, message.from_id, int(age_from), int(age_to))
 
             bot.keyboard = settings_keyboard
             bot.reply_to(message, f'Ваш возраст поиска от {age_from} до {age_to}')
@@ -142,7 +141,7 @@ if __name__ == '__main__':
         if text == 'ж' or text == 'м':
             sex_id = {'ж': False, 'м': True}
 
-            update_search_sex(db_session, message.from_id, sex_id[text])
+            query.update_search_sex(db_session, message.from_id, sex_id[text])
 
             bot.keyboard = settings_keyboard
             bot.reply_to(message, f'Ваш пол поиска {text}')
@@ -158,7 +157,7 @@ if __name__ == '__main__':
     def settings(message):
         bot.keyboard = settings_keyboard
 
-        user = get_vk_user(db_session, message.from_id)
+        user = query.get_vk_user(db_session, message.from_id)
         text = get_readable_settings(user)
         bot.reply_to(message, text)
 
@@ -166,17 +165,17 @@ if __name__ == '__main__':
         bot.keyboard = default_keyboard
 
         if message.text == Command.like:
-            add_user_like(db_session, message.from_id, vk_id)
+            query.add_user_like(db_session, message.from_id, vk_id)
             bot.reply_to(message, "Отличный выбор!")
         else:
-            add_user_dislike(db_session, message.from_id, vk_id)
+            query.add_user_dislike(db_session, message.from_id, vk_id)
             bot.reply_to(message, 'Ты еще найдешь себе друга!')
 
 
     @bot.message_handler(commands=[Command.search.value])
     def search(message):
 
-        user = get_vk_user(db_session, message.from_id)
+        user = query.get_vk_user(db_session, message.from_id)
         found_users = requester.search_users(
             sex=2 if user.search_sex else 1,
             city=user.city_id,
