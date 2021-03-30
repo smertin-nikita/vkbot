@@ -43,37 +43,7 @@ def get_url_for_token():
     exit(0)
 
 
-def get_vk_user(session, vk_id: int):
-    vk_user = session.query(VkUser).where(VkUser.vk_id == vk_id).one_or_none()
-    return vk_user
 
-
-def add_user_like(session, vk_id, like_id):
-    session.add(UserLike(vk_id=vk_id, like_id=like_id))
-    session.commit()
-
-
-def add_user_dislike(session, vk_id, dislike_id):
-    session.add(UserDislike(vk_id=vk_id, dislike_id=dislike_id))
-    session.commit()
-
-
-def add_vk_user(session, user: VkUser):
-    session.add(user)
-    session.commit()
-
-
-def update_search_age(session, vk_id: int, age_from: int, age_to: int):
-    session.query(VkUser).where(VkUser.vk_id == vk_id).update({
-        'age_from': age_from,
-        'age_to': age_to
-    })
-
-
-def update_search_sex(session, vk_id: int, search_sex: bool):
-    session.query(VkUser).where(VkUser.vk_id == vk_id).update({
-        'search_sex': search_sex
-    })
 
 
 def get_readable_settings(vk_user: VkUser):
