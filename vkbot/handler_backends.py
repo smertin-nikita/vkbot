@@ -2,7 +2,7 @@ import os
 import pickle
 import threading
 
-from telebot import apihelper
+from vkbot import apihelper
 
 
 class HandlerBackend(object):

@@ -7,7 +7,7 @@ try:
 except ImportError:
     import json
 
-import util
+from vkbot import util
 
 DISABLE_KEYLEN_ERROR = False
 

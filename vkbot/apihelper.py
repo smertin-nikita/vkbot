@@ -16,11 +16,11 @@ try:
     format_header_param = fields.format_header_param
 except ImportError:
     format_header_param = None
-import telebot
-from telebot import types
-from telebot import util
+import vkbot
+from vkbot import types
+from vkbot import util
 
-logger = telebot.logger
+logger = vkbot.logger
 
 proxy = None
 session = None

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+# from __future__ import print_function
 
 import logging
 import re
@@ -23,10 +23,8 @@ logger.addHandler(console_output_handler)
 
 logger.setLevel(logging.ERROR)
 
-import apihelper
-import types
-import util
-from handler_backends import MemoryHandlerBackend, FileHandlerBackend
+from vkbot import apihelper, util, types
+from vkbot.handler_backends import MemoryHandlerBackend, FileHandlerBackend
 
 """
 Module : telebot
@@ -301,7 +299,9 @@ class VkBot:
         :param long_polling_timeout. Timeout in seconds for long polling.
         :return: array of Updates
         """
-        json_updates = apihelper.get_updates(self.token, offset, limit, timeout, allowed_updates, long_polling_timeout)
+        # json_updates = apihelper.get_updates(self.token, offset, limit, timeout, allowed_updates, long_polling_timeout)
+        json_updates = self.long_poll.check()
+        print(json_updates)
         ret = []
         for ju in json_updates:
             ret.append(types.Update.de_json(ju))
@@ -509,7 +509,7 @@ class VkBot:
         else:
             self.__non_threaded_polling(none_stop, interval, timeout, long_polling_timeout)
 
-    def __threaded_polling(self, non_stop=False, interval=0, timeout = None, long_polling_timeout = None):
+    def __threaded_polling(self, non_stop=False, interval=0, timeout=None, long_polling_timeout=None):
         logger.info('Started polling.')
         self.__stop_polling.clear()
         error_interval = 0.25
@@ -991,7 +991,7 @@ class VkBot:
 
         return types.Message.de_json(
             apihelper.send_animation(self.token, chat_id, animation, duration, caption, reply_to_message_id, reply_markup,
-                                 parse_mode, disable_notification, timeout, thumb))
+                                     parse_mode, disable_notification, timeout, thumb))
 
     def send_video_note(self, chat_id, data, duration=None, length=None,
                         reply_to_message_id=None, reply_markup=None,
@@ -1595,7 +1595,7 @@ class VkBot:
     def reply_to(self, message, text, **kwargs):
         """
         Convenience function for `send_message(message.chat.id, text, reply_to_message_id=message.message_id, **kwargs)`
-	    :param message:
+        :param message:
         :param text:
         :param kwargs:
         :return:

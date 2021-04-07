@@ -51,5 +51,7 @@ if __name__ == '__main__':
     def echo_all(message):
         bot.reply_to(message, message.text)
 
+    bot.polling()
+
 
 
